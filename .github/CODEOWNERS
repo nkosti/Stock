@@ -1,0 +1,23 @@
+# Global code owners
+* @nkosti
+
+# Frontend specific
+/frontend/ @nkosti
+
+# Backend specific  
+/backend/ @nkosti
+
+# Documentation
+*.md @nkosti
+/docs/ @nkosti
+
+# Configuration files
+/.github/ @nkosti
+*.json @nkosti
+*.yml @nkosti
+*.yaml @nkosti
+
+# Security sensitive files
+requirements.txt @nkosti
+package.json @nkosti
+package-lock.json @nkosti
