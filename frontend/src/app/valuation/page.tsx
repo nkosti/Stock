@@ -47,8 +47,8 @@ export default function ValuationPage() {
     try {
       // Fetch stock info and chart data in parallel
       const [infoResponse, historyResponse] = await Promise.all([
-        fetch(`http://localhost:8000/api/stocks/${searchSymbol}/info`),
-        fetch(`http://localhost:8000/api/stocks/${searchSymbol}/history?period=${selectedTimeframe}`)
+        fetch(`http://localhost:8001/api/stocks/${searchSymbol}/info`),
+        fetch(`http://localhost:8001/api/stocks/${searchSymbol}/history?period=${selectedTimeframe}`)
       ])
       
       if (infoResponse.ok) {

@@ -43,7 +43,7 @@ export default function StockChart({ data, symbol, timeframe = '1y' }: StockChar
     if (timeframe === '3h') {
       const fetchMinuteData = async () => {
         try {
-          const response = await fetch(`http://localhost:8000/api/stocks/${symbol}/history?period=1m`)
+          const response = await fetch(`http://localhost:8001/api/stocks/${symbol}/history?period=1m`)
           if (response.ok) {
             const result = await response.json()
             setMinuteData(result.data)

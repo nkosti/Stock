@@ -63,7 +63,7 @@ export default function EmailVerification({ email, onBack, onVerified }: EmailVe
     setIsLoading(true)
     try {
       // TODO: Replace with actual API call
-      const response = await fetch('http://localhost:8000/auth/verify-email', {
+      const response = await fetch('http://localhost:8001/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: codeToVerify })
@@ -88,7 +88,7 @@ export default function EmailVerification({ email, onBack, onVerified }: EmailVe
     setIsLoading(true)
     try {
       // TODO: Replace with actual API call
-      await fetch('http://localhost:8000/auth/resend-verification', {
+      await fetch('http://localhost:8001/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
