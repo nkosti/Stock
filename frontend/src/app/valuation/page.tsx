@@ -5,11 +5,30 @@ import { useSearchParams } from 'next/navigation'
 import { Search, Calculator, TrendingUp } from 'lucide-react'
 import EnhancedStockChart from '@/components/charts/EnhancedStockChart'
 
+interface StockData {
+  symbol: string
+  company_name: string
+  sector: string
+  industry: string
+  market_cap: number
+  current_price: number
+  pe_ratio: number
+  forward_pe: number
+  price_to_book: number
+  peg_ratio: number
+  debt_to_equity: number
+  return_on_equity: number
+  revenue_growth: number
+  beta: number
+  '52_week_high': number
+  '52_week_low': number
+}
+
 export default function ValuationPage() {
   const searchParams = useSearchParams()
   const [symbol, setSymbol] = useState('')
-  const [stockData, setStockData] = useState(null)
-  const [chartData, setChartData] = useState(null)
+  const [stockData, setStockData] = useState<StockData | null>(null)
+  const [chartData, setChartData] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedTimeframe, setSelectedTimeframe] = useState('1Y')
 

@@ -34,9 +34,9 @@ const timeframeButtons = [
 
 export default function FinancialChart({ data, symbol, timeframe = '1Y' }: FinancialChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<unknown>(null)
-  const priceSeriesRef = useRef<unknown>(null)
-  const volumeSeriesRef = useRef<unknown>(null)
+  const chartRef = useRef<any>(null)
+  const priceSeriesRef = useRef<any>(null)
+  const volumeSeriesRef = useRef<any>(null)
   
   const [chartType, setChartType] = useState<ChartType>('line')
   const [selectedTimeframe, setSelectedTimeframe] = useState(timeframe)
@@ -48,7 +48,7 @@ export default function FinancialChart({ data, symbol, timeframe = '1Y' }: Finan
     if (!chartContainerRef.current || !data.length) return
 
     // Create chart
-    const chart = createChart(chartContainerRef.current, {
+    const chart: any = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: 400,
       layout: {
@@ -104,7 +104,7 @@ export default function FinancialChart({ data, symbol, timeframe = '1Y' }: Finan
     }
 
     // Create price series based on chart type
-    let priceSeries: unknown
+    let priceSeries: any
 
     if (chartType === 'candlestick' && data.some(d => d.Open && d.High && d.Low)) {
       priceSeries = chart.addCandlestickSeries({

@@ -185,7 +185,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
     )
   }
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: unknown[]; label?: string }) => {
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       const date = new Date(data.fullDate)
@@ -355,8 +355,8 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                 ticks={selectedTimeframe === '1d' ? 
                   (() => {
                     if (chartData.length === 0) return [];
-                    const firstTime = chartData[0].date;
-                    const lastTime = chartData[chartData.length - 1].date;
+                    const firstTime = Number(chartData[0].date);
+                    const lastTime = Number(chartData[chartData.length - 1].date);
                     const ticks = [];
                     // Generate ticks every 15 minutes for 1-minute data
                     for (let time = firstTime; time <= lastTime; time += 15 * 60 * 1000) {
@@ -395,7 +395,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                   stroke: '#888', 
                   strokeWidth: 1, 
                   strokeDasharray: '3 3',
-                  crosshair: true 
+ 
                 }} 
               />
               <Area 
@@ -427,8 +427,8 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                 ticks={selectedTimeframe === '1d' ? 
                   (() => {
                     if (chartData.length === 0) return [];
-                    const firstTime = chartData[0].date;
-                    const lastTime = chartData[chartData.length - 1].date;
+                    const firstTime = Number(chartData[0].date);
+                    const lastTime = Number(chartData[chartData.length - 1].date);
                     const ticks = [];
                     // Generate ticks every 15 minutes for 1-minute data
                     for (let time = firstTime; time <= lastTime; time += 15 * 60 * 1000) {
@@ -467,7 +467,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                   stroke: '#888', 
                   strokeWidth: 1, 
                   strokeDasharray: '3 3',
-                  crosshair: true 
+ 
                 }} 
               />
               <Line 
@@ -498,8 +498,8 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                 ticks={selectedTimeframe === '1d' ? 
                   (() => {
                     if (chartData.length === 0) return [];
-                    const firstTime = chartData[0].date;
-                    const lastTime = chartData[chartData.length - 1].date;
+                    const firstTime = Number(chartData[0].date);
+                    const lastTime = Number(chartData[chartData.length - 1].date);
                     const ticks = [];
                     // Generate ticks every 15 minutes for 1-minute data
                     for (let time = firstTime; time <= lastTime; time += 15 * 60 * 1000) {
@@ -538,13 +538,13 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                   stroke: '#888', 
                   strokeWidth: 1, 
                   strokeDasharray: '3 3',
-                  crosshair: true 
+ 
                 }} 
               />
               <Bar 
                 dataKey="close" 
                 fill="transparent" 
-                shape={(props: CandlestickProps) => {
+                shape={(props: any) => {
                   const { payload, x, y, width, height } = props;
                   if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) return null;
                   
@@ -620,7 +620,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                   const lastTime = chartData[chartData.length - 1].date;
                   const ticks = [];
                   // Generate ticks every 30 minutes
-                  for (let time = firstTime; time <= lastTime; time += 30 * 60 * 1000) {
+                  for (let time = Number(firstTime); time <= Number(lastTime); time += 30 * 60 * 1000) {
                     const date = new Date(time);
                     // Only show ticks for times ending in :00 or :30
                     if (date.getMinutes() === 0 || date.getMinutes() === 30) {
