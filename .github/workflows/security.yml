@@ -25,14 +25,22 @@ jobs:
       with:
         scan-type: 'fs'
         scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+        format: 'table'
+        
+    - name: Run Trivy vulnerability scanner (JSON output)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'json'
+        output: 'trivy-results.json'
+        
+    - name: Upload vulnerability scan results as artifact
+      uses: actions/upload-artifact@v3
       if: always()
       with:
-        sarif_file: 'trivy-results.sarif'
+        name: trivy-scan-results
+        path: trivy-results.json
 
   dependency-review:
     runs-on: ubuntu-latest

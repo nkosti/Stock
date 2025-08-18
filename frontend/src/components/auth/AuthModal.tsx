@@ -91,7 +91,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           alert(error.detail || 'Registration failed')
         }
       }
-    } catch (err) {
+    } catch {
       alert('Network error. Please try again.')
     }
   }

@@ -37,8 +37,6 @@ interface MinuteData {
 
 export default function StockChart({ data, symbol, timeframe = '1y' }: StockChartProps) {
   const [minuteData, setMinuteData] = useState<MinuteData[]>([])
-  const [hoveredPoint, setHoveredPoint] = useState<any>(null)
-  const [showMinuteData, setShowMinuteData] = useState(false)
 
   // Fetch minute data for hover functionality
   useEffect(() => {
@@ -170,7 +168,7 @@ export default function StockChart({ data, symbol, timeframe = '1y' }: StockChar
               tickFormatter={(value) => `$${Number(value).toFixed(1)}`}
             />
             <Tooltip 
-              formatter={(value, name) => [`$${Number(value).toFixed(2)}`, 'Price']}
+              formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Price']}
               labelFormatter={(label, payload) => {
                 if (payload && payload[0] && payload[0].payload.fullDate) {
                   const fullDate = new Date(payload[0].payload.fullDate)

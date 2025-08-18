@@ -14,8 +14,7 @@ import {
   ComposedChart,
   Area,
   AreaChart,
-  Cell,
-  ReferenceLine
+  Cell
 } from 'recharts'
 
 interface ChartData {
@@ -48,16 +47,27 @@ const timeframeButtons = [
   { key: 'max', label: 'MAX' }
 ]
 
-// Custom Candlestick component
-const CustomCandlestick = (props: any) => {
+// Custom Candlestick component  
+interface CandlestickProps {
+  payload?: {
+    open: number
+    high: number
+    low: number
+    close: number
+  }
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+const CustomCandlestick = (props: CandlestickProps) => {
   const { payload, x, y, width, height } = props
   if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) return null
 
   const { open, high, low, close } = payload
   const isUp = close >= open
   const color = isUp ? '#10b981' : '#ef4444'
-  const bodyHeight = Math.abs(close - open)
-  const bodyY = Math.min(close, open)
   
   const priceRange = high - low
   const scale = height / priceRange
@@ -175,7 +185,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
     )
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: unknown[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       const date = new Date(data.fullDate)
@@ -534,8 +544,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
               <Bar 
                 dataKey="close" 
                 fill="transparent" 
-                shape={(props: any) => {
-                  console.log('Bar props:', props); // Debug log
+                shape={(props: CandlestickProps) => {
                   const { payload, x, y, width, height } = props;
                   if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) return null;
                   
