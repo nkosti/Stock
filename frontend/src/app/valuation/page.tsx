@@ -18,10 +18,6 @@ export default function ValuationPage() {
     const symbolParam = searchParams.get('symbol')
     if (symbolParam) {
       setSymbol(symbolParam.toUpperCase())
-      // Trigger search after setting symbol
-      setTimeout(() => {
-        handleSearchForSymbol(symbolParam.toUpperCase())
-      }, 100)
     }
   }, [searchParams])
 

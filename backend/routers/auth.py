@@ -1,14 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+import os
 import random
 import string
-import os
+from datetime import datetime, timedelta
 from typing import Dict
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -31,12 +32,13 @@ conf = ConnectionConfig(
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
+    VALIDATE_CERTS=True,
 )
 
 # In-memory storage (replace with database in production)
 users_db: Dict[str, dict] = {}
 verification_codes: Dict[str, str] = {}
+
 
 # Pydantic models
 class UserCreate(BaseModel):
@@ -44,25 +46,32 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
 
 class EmailVerify(BaseModel):
     email: EmailStr
     code: str
 
+
 class ResendVerification(BaseModel):
     email: EmailStr
+
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+
 def generate_verification_code():
-    return ''.join(random.choices(string.digits, k=6))
+    return "".join(random.choices(string.digits, k=6))
+
 
 async def send_verification_email(email: str, code: str):
     try:
@@ -90,9 +99,9 @@ async def send_verification_email(email: str, code: str):
                 </body>
             </html>
             """,
-            subtype="html"
+            subtype="html",
         )
-        
+
         fm = FastMail(conf)
         await fm.send_message(message)
         return True
@@ -100,97 +109,106 @@ async def send_verification_email(email: str, code: str):
         print(f"Failed to send email: {e}")
         return False
 
+
 @router.post("/register")
 async def register(user: UserCreate):
     # Check if user already exists
     if user.email in users_db:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     # Hash password
     hashed_password = get_password_hash(user.password)
-    
+
     # Store user (unverified)
     users_db[user.email] = {
         "name": user.name,
         "email": user.email,
         "hashed_password": hashed_password,
         "is_verified": False,
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
     }
-    
+
     # Generate and store verification code
     verification_code = generate_verification_code()
     verification_codes[user.email] = verification_code
-    
+
     # Send verification email
     email_sent = await send_verification_email(user.email, verification_code)
-    
+
     if not email_sent:
         # For development: proceed without email, just log the code
         print(f"Verification code for {user.email}: {verification_code}")
-        return {"message": f"Registration successful. Verification code (DEV MODE): {verification_code}"}
-    
-    return {"message": "Registration successful. Please check your email for verification code."}
+        return {
+            "message": f"Registration successful. Verification code (DEV MODE): {verification_code}"
+        }
+
+    return {
+        "message": "Registration successful. Please check your email for verification code."
+    }
+
 
 @router.post("/verify-email")
 async def verify_email(verification: EmailVerify):
     if verification.email not in users_db:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if verification.email not in verification_codes:
         raise HTTPException(status_code=400, detail="No verification code found")
-    
+
     if verification_codes[verification.email] != verification.code:
         raise HTTPException(status_code=400, detail="Invalid verification code")
-    
+
     # Mark user as verified
     users_db[verification.email]["is_verified"] = True
-    
+
     # Remove verification code
     del verification_codes[verification.email]
-    
+
     return {"message": "Email verified successfully"}
+
 
 @router.post("/resend-verification")
 async def resend_verification(resend: ResendVerification):
     if resend.email not in users_db:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if users_db[resend.email]["is_verified"]:
         raise HTTPException(status_code=400, detail="Email already verified")
-    
+
     # Generate new verification code
     verification_code = generate_verification_code()
     verification_codes[resend.email] = verification_code
-    
+
     # Send verification email
     email_sent = await send_verification_email(resend.email, verification_code)
-    
+
     if not email_sent:
         raise HTTPException(status_code=500, detail="Failed to send verification email")
-    
+
     return {"message": "Verification code resent successfully"}
+
 
 @router.post("/login")
 async def login(user: UserLogin):
     if user.email not in users_db:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     stored_user = users_db[user.email]
-    
+
     if not stored_user["is_verified"]:
         raise HTTPException(status_code=401, detail="Email not verified")
-    
+
     if not verify_password(user.password, stored_user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

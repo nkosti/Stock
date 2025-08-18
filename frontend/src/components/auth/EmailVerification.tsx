@@ -75,7 +75,7 @@ export default function EmailVerification({ email, onBack, onVerified }: EmailVe
         const data = await response.json()
         setError(data.message || 'Invalid verification code')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to verify code. Please try again.')
     } finally {
       setIsLoading(false)
@@ -97,7 +97,7 @@ export default function EmailVerification({ email, onBack, onVerified }: EmailVe
       setCountdown(60)
       setCanResend(false)
       setError('')
-    } catch (err) {
+    } catch {
       setError('Failed to resend code. Please try again.')
     } finally {
       setIsLoading(false)
@@ -121,7 +121,7 @@ export default function EmailVerification({ email, onBack, onVerified }: EmailVe
           Verify Your Email
         </h2>
         <p className="text-slate-600">
-          We've sent a 6-digit verification code to
+          We&apos;ve sent a 6-digit verification code to
         </p>
         <p className="text-slate-900 font-semibold">{email}</p>
       </div>
@@ -163,7 +163,7 @@ export default function EmailVerification({ email, onBack, onVerified }: EmailVe
       </form>
 
       <div className="text-center text-sm text-slate-600">
-        <p>Didn't receive the code?</p>
+        <p>Didn&apos;t receive the code?</p>
         <button
           onClick={handleResendCode}
           disabled={!canResend || isLoading}
