@@ -54,7 +54,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       if (isLogin) {
         // Handle login
-        const response = await fetch('http://localhost:8001/auth/login', {
+        const response = await fetch('http://localhost:8000/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -74,7 +74,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       } else {
         // Handle signup
-        const response = await fetch('http://localhost:8001/auth/register', {
+        const response = await fetch('http://localhost:8000/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -58,7 +58,7 @@ export default function PortfolioPage() {
     setLoading(true)
     try {
       // Fetch current price
-      const response = await fetch(`http://localhost:8001/api/stocks/${newHolding.symbol.toUpperCase()}/info`)
+      const response = await fetch(`http://localhost:8000/api/stocks/${newHolding.symbol.toUpperCase()}/info`)
       let currentPrice = parseFloat(newHolding.avgPrice)
       
       if (response.ok) {
@@ -102,7 +102,7 @@ export default function PortfolioPage() {
       const updatedHoldings = await Promise.all(
         holdings.map(async (holding) => {
           try {
-            const response = await fetch(`http://localhost:8001/api/stocks/${holding.symbol}/info`)
+            const response = await fetch(`http://localhost:8000/api/stocks/${holding.symbol}/info`)
             if (response.ok) {
               const data = await response.json()
               const currentPrice = data.current_price || holding.avgPrice

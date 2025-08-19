@@ -30,10 +30,13 @@ cd frontend && npm run dev
 
 ## Standard Development Setup
 
-1. **Check and free ports:**
+1. **Kill existing processes and free ports:**
    ```bash
+   # Kill all existing Node.js and Python dev server processes
+   pkill -f "next dev" 2>/dev/null || true
+   pkill -f "uvicorn" 2>/dev/null || true
    kill $(lsof -ti:8000) 2>/dev/null || true
-   kill $(lsof -ti:3000) 2>/dev/null || true
+   kill $(lsof -ti:3001) 2>/dev/null || true
    ```
 
 2. **Start backend (port 8000):**
@@ -43,16 +46,16 @@ cd frontend && npm run dev
    python -m uvicorn main:app --host 0.0.0.0 --port 8000
    ```
 
-3. **Start frontend (port 3000/3002):**
+3. **Start frontend (port 3001):**
    ```bash
    cd frontend
-   npm run dev
+   PORT=3001 npm run dev
    ```
 
 ## API Configuration
 
 - **Backend:** http://localhost:8000
-- **Frontend:** http://localhost:3000 (or 3002 if 3000 is busy)
+- **Frontend:** http://localhost:3001
 - **All API calls should use:** `http://localhost:8000`
 
 ## Common Issues
@@ -63,8 +66,8 @@ cd frontend && npm run dev
 - **NEVER change API URLs** - always fix the port conflict instead
 
 ### CORS Issues
-- Backend allows origins: 3000, 3001, 3002
-- If frontend runs on different port, update `main.py` CORS config
+- Backend allows origin: 3001 only
+- Always use PORT=3001 when starting frontend to avoid CORS issues
 
 ## Project Structure
 

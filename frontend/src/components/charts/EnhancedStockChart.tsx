@@ -11,10 +11,10 @@ import {
   Tooltip, 
   BarChart,
   Bar,
-  ComposedChart,
   Area,
   AreaChart,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts'
 
 interface ChartData {
@@ -35,76 +35,26 @@ interface EnhancedStockChartProps {
 
 type ChartType = 'line' | 'area' | 'candlestick'
 
+
 const timeframeButtons = [
-  { key: '1d', label: '1D' },
-  { key: '5d', label: '5D' },
-  { key: '1mo', label: '1M' },
-  { key: '3mo', label: '3M' },
-  { key: '6mo', label: '6M' },
-  { key: '1y', label: '1Y' },
-  { key: '2y', label: '2Y' },
-  { key: '5y', label: '5Y' },
-  { key: 'max', label: 'MAX' }
+  { key: '2h', label: '2h' },
+  { key: '1d', label: '1d' },
+  { key: '2d', label: '2d' },
+  { key: '1w', label: '1w' },
+  { key: '1mo', label: '1m' },
+  { key: '3mo', label: '3m' },
+  { key: '6mo', label: '6m' },
+  { key: '1y', label: '1y' },
+  { key: '2y', label: '2y' },
+  { key: '5y', label: '5y' },
+  { key: 'max', label: 'Max' }
 ]
 
-// Custom Candlestick component  
-interface CandlestickProps {
-  payload?: {
-    open: number
-    high: number
-    low: number
-    close: number
-  }
-  x: number
-  y: number
-  width: number
-  height: number
-}
 
-const CustomCandlestick = (props: CandlestickProps) => {
-  const { payload, x, y, width, height } = props
-  if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) return null
-
-  const { open, high, low, close } = payload
-  const isUp = close >= open
-  const color = isUp ? '#10b981' : '#ef4444'
-  
-  const priceRange = high - low
-  const scale = height / priceRange
-  
-  const wickX = x + width / 2
-  const highY = y + (high - Math.max(close, open)) * scale
-  const lowY = y + height - (Math.min(close, open) - low) * scale
-  const bodyTop = y + (high - Math.max(close, open)) * scale
-  const bodyBottom = y + (high - Math.min(close, open)) * scale
-
-  return (
-    <g>
-      {/* Wick */}
-      <line
-        x1={wickX}
-        y1={highY}
-        x2={wickX}
-        y2={lowY}
-        stroke={color}
-        strokeWidth={1}
-      />
-      {/* Body */}
-      <rect
-        x={x + width * 0.25}
-        y={bodyTop}
-        width={width * 0.5}
-        height={bodyBottom - bodyTop}
-        fill={color}
-        stroke={color}
-      />
-    </g>
-  )
-}
-
-export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onTimeframeChange }: EnhancedStockChartProps) {
+export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', onTimeframeChange }: EnhancedStockChartProps) {
   const [chartType, setChartType] = useState<ChartType>('line')
   const [selectedTimeframe, setSelectedTimeframe] = useState(timeframe)
+  const [crosshair, setCrosshair] = useState<{x: string | number, y: number} | null>(null)
 
   // Sync with parent timeframe changes
   useEffect(() => {
@@ -118,6 +68,68 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
     }
   }
 
+  // Get Y-axis label count based on interval
+  const getYAxisTickCount = (timeframe: string) => {
+    switch (timeframe) {
+      case '2h': return 14
+      case '1d': return 12
+      default: return 10
+    }
+  }
+
+  // Get X-axis configuration for 6 evenly distributed labels
+  const getXAxisInterval = (dataLength: number) => {
+    if (dataLength <= 6) return 0
+    return Math.floor(dataLength / 6)
+  }
+
+  // Handle mouse events for crosshair
+  const handleMouseMove = (e: {activeLabel?: string | number; activePayload?: any[]; activeIndex?: string | number}) => {
+    // Try to get data from activePayload first, then fall back to using activeIndex
+    let yValue = null
+    let crosshairData = null
+    
+    if (e && e.activeLabel !== undefined) {
+      if (e.activePayload && e.activePayload.length > 0) {
+        // Standard approach - use activePayload
+        yValue = e.activePayload[0].payload?.price || e.activePayload[0].payload?.close || e.activePayload[0].value
+        crosshairData = {
+          x: e.activeLabel,
+          y: yValue
+        }
+      } else if (e.activeIndex !== undefined && chartData && chartData.length > 0) {
+        // Fallback approach - use activeIndex to get data directly
+        const index = parseInt(e.activeIndex)
+        if (index >= 0 && index < chartData.length) {
+          const dataPoint = chartData[index]
+          yValue = dataPoint.price || dataPoint.close
+          crosshairData = {
+            x: e.activeLabel,
+            y: yValue
+          }
+        }
+      }
+      
+      if (crosshairData && yValue !== null && yValue !== undefined && isFinite(yValue)) {
+        setCrosshair(crosshairData)
+        console.log(`Crosshair positioned at: x=${crosshairData.x}, y=$${yValue.toFixed(2)}`, {
+          symbol,
+          timeframe: selectedTimeframe,
+          timestamp: new Date().toISOString()
+        })
+      }
+    }
+  }
+
+  const handleMouseLeave = () => {
+    setCrosshair(null)
+    console.log(`Crosshair cleared for ${symbol}`, {
+      symbol,
+      timeframe: selectedTimeframe,
+      timestamp: new Date().toISOString()
+    })
+  }
+
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return []
 
@@ -126,23 +138,20 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
       let formattedDate: string
 
       // Format date based on timeframe
-      if (selectedTimeframe === '1d') {
-        // For 1D timeframe, show time (HH:MM)
+      if (['2h', '1d', '2d'].includes(selectedTimeframe)) {
+        // For intraday views (2h, 1d, 2d), show hours
         formattedDate = date.toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit',
           hour12: false 
         })
-      } else if (selectedTimeframe === '5d') {
-        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      } else if (selectedTimeframe === '1mo' || selectedTimeframe === '3mo') {
-        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       } else {
-        formattedDate = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+        // For longer ranges, show dates
+        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       }
 
       return {
-        date: selectedTimeframe === '1d' ? date.getTime() : formattedDate,
+        date: ['2h', '1d', '2d'].includes(selectedTimeframe) ? date.getTime() : formattedDate,
         displayDate: formattedDate,
         fullDate: item.Date,
         price: item.Close,
@@ -185,7 +194,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
     )
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: {active?: boolean; payload?: any[]; label?: string; coordinate?: any}) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       const date = new Date(data.fullDate)
@@ -199,39 +208,39 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
       
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs min-w-32">
-          <div className="space-y-1">
-            <div className="flex justify-between gap-4">
-              <span className="font-medium text-gray-900">Date:</span>
-              <span className="text-gray-900">{formatDate()}</span>
-            </div>
-            {data.open && (
+            <div className="space-y-1">
               <div className="flex justify-between gap-4">
-                <span className="font-medium text-gray-900">Open:</span>
-                <span className="text-gray-900">${data.open.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">Date:</span>
+                <span className="text-gray-900">{formatDate()}</span>
               </div>
-            )}
-            {data.high && (
+              {data.open && (
+                <div className="flex justify-between gap-4">
+                  <span className="font-medium text-gray-900">Open:</span>
+                  <span className="text-gray-900">${data.open.toFixed(2)}</span>
+                </div>
+              )}
+              {data.high && (
+                <div className="flex justify-between gap-4">
+                  <span className="font-medium text-gray-900">High:</span>
+                  <span className="text-green-600">${data.high.toFixed(2)}</span>
+                </div>
+              )}
+              {data.low && (
+                <div className="flex justify-between gap-4">
+                  <span className="font-medium text-gray-900">Low:</span>
+                  <span className="text-red-600">${data.low.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between gap-4">
-                <span className="font-medium text-gray-900">High:</span>
-                <span className="text-green-600">${data.high.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">Close:</span>
+                <span className="text-gray-900">${(data.close || data.price).toFixed(2)}</span>
               </div>
-            )}
-            {data.low && (
               <div className="flex justify-between gap-4">
-                <span className="font-medium text-gray-900">Low:</span>
-                <span className="text-red-600">${data.low.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">Volume:</span>
+                <span className="text-gray-900">{data.volume.toLocaleString()}</span>
               </div>
-            )}
-            <div className="flex justify-between gap-4">
-              <span className="font-medium text-gray-900">Close:</span>
-              <span className="text-gray-900">${(data.close || data.price).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="font-medium text-gray-900">Volume:</span>
-              <span className="text-gray-900">{data.volume.toLocaleString()}</span>
             </div>
           </div>
-        </div>
       )
     }
     return null
@@ -333,8 +342,10 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
           {chartType === 'area' ? (
             <AreaChart 
               data={chartData} 
-              margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               syncId="chart"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
             >
               <defs>
                 <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -342,16 +353,22 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="#e0e0e0" />
+              <CartesianGrid 
+                strokeDasharray="2 2" 
+                stroke="#ddd" 
+                strokeOpacity={0.3}
+                horizontal={true}
+                vertical={false}
+              />
               <XAxis 
                 dataKey="date" 
                 tick={{ fontSize: 12 }}
-                interval={selectedTimeframe === '1d' ? 0 : "preserveStartEnd"}
+                interval={['2h', '1d', '2d'].includes(selectedTimeframe) ? getXAxisInterval(chartData.length) : getXAxisInterval(chartData.length)}
                 angle={0}
                 textAnchor="middle"
-                type={selectedTimeframe === '1d' ? 'number' : 'category'}
-                scale={selectedTimeframe === '1d' ? 'time' : 'auto'}
-                domain={selectedTimeframe === '1d' ? ['dataMin', 'dataMax'] : undefined}
+                type={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'number' : 'category'}
+                scale={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'time' : 'auto'}
+                domain={['2h', '1d', '2d'].includes(selectedTimeframe) ? ['dataMin', 'dataMax'] : undefined}
                 ticks={selectedTimeframe === '1d' ? 
                   (() => {
                     if (chartData.length === 0) return [];
@@ -369,7 +386,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                     return ticks;
                   })() : undefined
                 }
-                tickFormatter={selectedTimeframe === '1d' ? 
+                tickFormatter={['2h', '1d', '2d'].includes(selectedTimeframe) ? 
                   (value) => new Date(value).toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
                     minute: '2-digit',
@@ -381,22 +398,14 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
               <YAxis 
                 orientation="right"
                 tick={{ fontSize: 12 }}
-                domain={['dataMin - 3', 'dataMax + 2']}
-                tickFormatter={(value) => {
-                  const rounded = Math.round(value * 5) / 5;
-                  return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(1);
-                }}
+                domain={['dataMin * 0.99', 'dataMax * 1.01']}
+                tickFormatter={(value) => `$${value.toFixed(2)}`}
                 axisLine={false}
-                tickCount={6}
+                tickCount={getYAxisTickCount(selectedTimeframe)}
               />
               <Tooltip 
-                content={CustomTooltip} 
-                cursor={{ 
-                  stroke: '#888', 
-                  strokeWidth: 1, 
-                  strokeDasharray: '3 3',
- 
-                }} 
+                content={CustomTooltip}
+                cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
               />
               <Area 
                 type="monotone" 
@@ -407,23 +416,37 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                 strokeWidth={2}
                 activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
               />
+              {crosshair && (
+                <>
+                  <ReferenceLine x={crosshair.x} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+                  <ReferenceLine y={crosshair.y} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+                </>
+              )}
             </AreaChart>
           ) : chartType === 'line' ? (
             <LineChart 
               data={chartData} 
-              margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               syncId="chart"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
             >
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="#e0e0e0" />
+              <CartesianGrid 
+                strokeDasharray="2 2" 
+                stroke="#ddd" 
+                strokeOpacity={0.3}
+                horizontal={true}
+                vertical={false}
+              />
               <XAxis 
                 dataKey="date" 
                 tick={{ fontSize: 12 }}
-                interval={selectedTimeframe === '1d' ? 0 : "preserveStartEnd"}
+                interval={['2h', '1d', '2d'].includes(selectedTimeframe) ? getXAxisInterval(chartData.length) : getXAxisInterval(chartData.length)}
                 angle={0}
                 textAnchor="middle"
-                type={selectedTimeframe === '1d' ? 'number' : 'category'}
-                scale={selectedTimeframe === '1d' ? 'time' : 'auto'}
-                domain={selectedTimeframe === '1d' ? ['dataMin', 'dataMax'] : undefined}
+                type={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'number' : 'category'}
+                scale={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'time' : 'auto'}
+                domain={['2h', '1d', '2d'].includes(selectedTimeframe) ? ['dataMin', 'dataMax'] : undefined}
                 ticks={selectedTimeframe === '1d' ? 
                   (() => {
                     if (chartData.length === 0) return [];
@@ -441,7 +464,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                     return ticks;
                   })() : undefined
                 }
-                tickFormatter={selectedTimeframe === '1d' ? 
+                tickFormatter={['2h', '1d', '2d'].includes(selectedTimeframe) ? 
                   (value) => new Date(value).toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
                     minute: '2-digit',
@@ -453,22 +476,14 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
               <YAxis 
                 orientation="right"
                 tick={{ fontSize: 12 }}
-                domain={['dataMin - 3', 'dataMax + 2']}
-                tickFormatter={(value) => {
-                  const rounded = Math.round(value * 5) / 5;
-                  return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(1);
-                }}
+                domain={['dataMin * 0.99', 'dataMax * 1.01']}
+                tickFormatter={(value) => `$${value.toFixed(2)}`}
                 axisLine={false}
-                tickCount={6}
+                tickCount={getYAxisTickCount(selectedTimeframe)}
               />
               <Tooltip 
-                content={CustomTooltip} 
-                cursor={{ 
-                  stroke: '#888', 
-                  strokeWidth: 1, 
-                  strokeDasharray: '3 3',
- 
-                }} 
+                content={CustomTooltip}
+                cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
               />
               <Line 
                 type="monotone" 
@@ -478,23 +493,37 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                 dot={false}
                 activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
               />
+              {crosshair && (
+                <>
+                  <ReferenceLine x={crosshair.x} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+                  <ReferenceLine y={crosshair.y} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+                </>
+              )}
             </LineChart>
           ) : (
-            <ComposedChart 
+            <LineChart 
               data={chartData} 
-              margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               syncId="chart"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
             >
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="#e0e0e0" />
+              <CartesianGrid 
+                strokeDasharray="2 2" 
+                stroke="#ddd" 
+                strokeOpacity={0.3}
+                horizontal={true}
+                vertical={false}
+              />
               <XAxis 
                 dataKey="date" 
                 tick={{ fontSize: 12 }}
-                interval={selectedTimeframe === '1d' ? 0 : "preserveStartEnd"}
+                interval={['2h', '1d', '2d'].includes(selectedTimeframe) ? getXAxisInterval(chartData.length) : getXAxisInterval(chartData.length)}
                 angle={0}
                 textAnchor="middle"
-                type={selectedTimeframe === '1d' ? 'number' : 'category'}
-                scale={selectedTimeframe === '1d' ? 'time' : 'auto'}
-                domain={selectedTimeframe === '1d' ? ['dataMin', 'dataMax'] : undefined}
+                type={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'number' : 'category'}
+                scale={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'time' : 'auto'}
+                domain={['2h', '1d', '2d'].includes(selectedTimeframe) ? ['dataMin', 'dataMax'] : undefined}
                 ticks={selectedTimeframe === '1d' ? 
                   (() => {
                     if (chartData.length === 0) return [];
@@ -512,7 +541,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
                     return ticks;
                   })() : undefined
                 }
-                tickFormatter={selectedTimeframe === '1d' ? 
+                tickFormatter={['2h', '1d', '2d'].includes(selectedTimeframe) ? 
                   (value) => new Date(value).toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
                     minute: '2-digit',
@@ -524,76 +553,47 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
               <YAxis 
                 orientation="right"
                 tick={{ fontSize: 12 }}
-                domain={['dataMin - 3', 'dataMax + 2']}
-                tickFormatter={(value) => {
-                  const rounded = Math.round(value * 5) / 5;
-                  return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(1);
-                }}
+                domain={['dataMin * 0.99', 'dataMax * 1.01']}
+                tickFormatter={(value) => `$${value.toFixed(2)}`}
                 axisLine={false}
-                tickCount={6}
+                tickCount={getYAxisTickCount(selectedTimeframe)}
               />
               <Tooltip 
-                content={CustomTooltip} 
-                cursor={{ 
-                  stroke: '#888', 
-                  strokeWidth: 1, 
-                  strokeDasharray: '3 3',
- 
-                }} 
+                content={CustomTooltip}
+                cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
               />
-              <Bar 
-                dataKey="close" 
-                fill="transparent" 
-                shape={(props: any) => {
-                  const { payload, x, y, width, height } = props;
-                  if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) return null;
-                  
-                  const { open, high, low, close } = payload;
-                  const isUp = close >= open;
-                  const color = isUp ? '#10b981' : '#ef4444';
-                  
-                  // For now, use the current value's position and calculate relative positions
-                  const currentPrice = close;
-                  const baseY = y; // This is the Y position for the close price
-                  
-                  // Calculate relative positions based on price differences
-                  // This is an approximation - we'll need to refine this
-                  const pricePerPixel = 0.1; // Rough estimate, needs refinement
-                  
-                  const openY = baseY + (currentPrice - open) / pricePerPixel;
-                  const closeY = baseY;
-                  const highY = baseY + (currentPrice - high) / pricePerPixel;
-                  const lowY = baseY + (currentPrice - low) / pricePerPixel;
-                  
-                  const wickX = x + width / 2;
-                  const bodyTop = Math.min(openY, closeY);
-                  const bodyHeight = Math.abs(openY - closeY);
-                  
-                  return (
-                    <g>
-                      {/* Wick */}
-                      <line
-                        x1={wickX}
-                        y1={highY}
-                        x2={wickX}
-                        y2={lowY}
-                        stroke={color}
-                        strokeWidth={1}
-                      />
-                      {/* Body */}
-                      <rect
-                        x={x + width * 0.25}
-                        y={bodyTop}
-                        width={width * 0.5}
-                        height={Math.max(bodyHeight, 2)}
-                        fill={color}
-                        stroke={color}
-                      />
-                    </g>
-                  );
-                }} 
+              {/* Show multiple lines for OHLC data */}
+              <Line 
+                type="monotone" 
+                dataKey="high" 
+                stroke="#10b981" 
+                strokeWidth={1}
+                dot={false}
+                strokeDasharray="3 3"
               />
-            </ComposedChart>
+              <Line 
+                type="monotone" 
+                dataKey="low" 
+                stroke="#ef4444" 
+                strokeWidth={1}
+                dot={false}
+                strokeDasharray="3 3"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="price" 
+                stroke="#3b82f6" 
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+              />
+              {crosshair && (
+                <>
+                  <ReferenceLine x={crosshair.x} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+                  <ReferenceLine y={crosshair.y} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+                </>
+              )}
+            </LineChart>
           )}
         </ResponsiveContainer>
       </div>
@@ -603,34 +603,17 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1y', onT
         <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
           <BarChart 
             data={chartData} 
-            margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             syncId="chart"
           >
             <XAxis 
               dataKey="date" 
               tick={{ fontSize: 12 }}
-              interval={selectedTimeframe === '1d' ? 0 : "preserveStartEnd"}
-              type={selectedTimeframe === '1d' ? 'number' : 'category'}
-              scale={selectedTimeframe === '1d' ? 'time' : 'auto'}
-              domain={selectedTimeframe === '1d' ? ['dataMin', 'dataMax'] : undefined}
-              ticks={selectedTimeframe === '1d' ? 
-                (() => {
-                  if (chartData.length === 0) return [];
-                  const firstTime = chartData[0].date;
-                  const lastTime = chartData[chartData.length - 1].date;
-                  const ticks = [];
-                  // Generate ticks every 30 minutes
-                  for (let time = Number(firstTime); time <= Number(lastTime); time += 30 * 60 * 1000) {
-                    const date = new Date(time);
-                    // Only show ticks for times ending in :00 or :30
-                    if (date.getMinutes() === 0 || date.getMinutes() === 30) {
-                      ticks.push(time);
-                    }
-                  }
-                  return ticks;
-                })() : undefined
-              }
-              tickFormatter={selectedTimeframe === '1d' ? 
+              interval={['2h', '1d', '2d'].includes(selectedTimeframe) ? getXAxisInterval(chartData.length) : getXAxisInterval(chartData.length)}
+              type={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'number' : 'category'}
+              scale={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'time' : 'auto'}
+              domain={['2h', '1d', '2d'].includes(selectedTimeframe) ? ['dataMin', 'dataMax'] : undefined}
+              tickFormatter={['2h', '1d', '2d'].includes(selectedTimeframe) ? 
                 (value) => new Date(value).toLocaleTimeString('en-US', { 
                   hour: '2-digit', 
                   minute: '2-digit',

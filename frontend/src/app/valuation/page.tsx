@@ -30,7 +30,7 @@ export default function ValuationPage() {
   const [stockData, setStockData] = useState<StockData | null>(null)
   const [chartData, setChartData] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(false)
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1Y')
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1mo')
 
   // Auto-search when symbol is provided in URL
   useEffect(() => {
@@ -47,8 +47,8 @@ export default function ValuationPage() {
     try {
       // Fetch stock info and chart data in parallel
       const [infoResponse, historyResponse] = await Promise.all([
-        fetch(`http://localhost:8001/api/stocks/${searchSymbol}/info`),
-        fetch(`http://localhost:8001/api/stocks/${searchSymbol}/history?period=${selectedTimeframe}`)
+        fetch(`http://localhost:8000/api/stocks/${searchSymbol}/info`),
+        fetch(`http://localhost:8000/api/stocks/${searchSymbol}/history?period=${selectedTimeframe}`)
       ])
       
       if (infoResponse.ok) {
@@ -80,7 +80,7 @@ export default function ValuationPage() {
     if (symbol) {
       setLoading(true)
       try {
-        const historyResponse = await fetch(`http://localhost:8001/api/stocks/${symbol}/history?period=${newTimeframe}`)
+        const historyResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/history?period=${newTimeframe}`)
         if (historyResponse.ok) {
           const historyData = await historyResponse.json()
           setChartData(historyData.data)

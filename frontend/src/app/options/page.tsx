@@ -39,7 +39,7 @@ export default function OptionsPage() {
   const calculateOptionPrice = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8001/api/options/black-scholes', {
+      const response = await fetch('http://localhost:8000/api/options/black-scholes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
