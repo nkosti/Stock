@@ -2,14 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, Calculator, TrendingUp } from 'lucide-react'
+import { Search, Calculator } from 'lucide-react'
 import EnhancedStockChart from '@/components/charts/EnhancedStockChart'
+import CompanyOverview from '@/components/valuation/CompanyOverview'
+import MetricCard from '@/components/valuation/MetricCard'
+import MetricRow from '@/components/valuation/MetricRow'
+import type { StockData, ChartData } from '@/types/stock'
+
 
 export default function ValuationPage() {
   const searchParams = useSearchParams()
   const [symbol, setSymbol] = useState('')
-  const [stockData, setStockData] = useState(null)
-  const [chartData, setChartData] = useState(null)
+  const [stockData, setStockData] = useState<StockData>()
+  const [chartData, setChartData] = useState<ChartData | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedTimeframe, setSelectedTimeframe] = useState('1Y')
 
@@ -23,7 +28,7 @@ export default function ValuationPage() {
         handleSearchForSymbol(symbolParam.toUpperCase())
       }, 100)
     }
-  }, [searchParams])
+  }, [searchParams]) // handleSearchForSymbol changes on every render, so we omit it to avoid infinite loops
 
   const handleSearchForSymbol = async (searchSymbol: string) => {
     if (!searchSymbol.trim()) return
@@ -65,7 +70,7 @@ export default function ValuationPage() {
     if (symbol) {
       setLoading(true)
       try {
-        const historyResponse = await fetch(`http://localhost:8001/api/stocks/${symbol}/history?period=${newTimeframe}`)
+        const historyResponse = await fetch(`http://localhost:8000/api/stocks/${symbol}/history?period=${newTimeframe}`)
         if (historyResponse.ok) {
           const historyData = await historyResponse.json()
           setChartData(historyData.data)
@@ -130,85 +135,51 @@ export default function ValuationPage() {
       {stockData && (
         <div className="space-y-6">
           {/* Company Overview */}
-          <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <TrendingUp className="h-6 w-6 text-emerald-600" />
-              <h2 className="text-2xl font-bold text-blue-900">{stockData.company_name} ({stockData.symbol})</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-slate-600">Sector</p>
-                <p className="font-semibold text-slate-900">{stockData.sector || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Industry</p>
-                <p className="font-semibold text-slate-900">{stockData.industry || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Market Cap</p>
-                <p className="font-semibold text-slate-900">
-                  {stockData.market_cap 
-                    ? `$${(stockData.market_cap / 1000000000).toFixed(2)}B` 
-                    : 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
+          <CompanyOverview stockData={stockData} />
 
           {/* Price and Valuation Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Current Price Info */}
-            <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-6">
-              <h3 className="text-xl font-bold text-blue-900 mb-4">Price Information</h3>
+            <MetricCard title="Price Information">
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-slate-700">Current Price</span>
-                  <span className="font-bold text-lg text-emerald-600">
-                    ${stockData.current_price?.toFixed(2) || 'N/A'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700">52 Week High</span>
-                  <span className="font-semibold text-slate-900">${stockData['52_week_high']?.toFixed(2) || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700">52 Week Low</span>
-                  <span className="font-semibold text-slate-900">${stockData['52_week_low']?.toFixed(2) || 'N/A'}</span>
-                </div>
+                <MetricRow 
+                  label="Current Price" 
+                  value={stockData.current_price} 
+                  isHighlighted={true}
+                  prefix="$"
+                />
+                <MetricRow 
+                  label="52 Week High" 
+                  value={stockData['52_week_high']} 
+                  prefix="$"
+                />
+                <MetricRow 
+                  label="52 Week Low" 
+                  value={stockData['52_week_low']} 
+                  prefix="$"
+                />
               </div>
-            </div>
+            </MetricCard>
 
             {/* Valuation Ratios */}
-            <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-6">
-              <h3 className="text-xl font-bold text-blue-900 mb-4">Valuation Ratios</h3>
+            <MetricCard title="Valuation Ratios">
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-slate-700">P/E Ratio</span>
-                  <span className="font-semibold text-slate-900">{stockData.pe_ratio?.toFixed(2) || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700">Forward P/E</span>
-                  <span className="font-semibold text-slate-900">{stockData.forward_pe?.toFixed(2) || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700">P/B Ratio</span>
-                  <span className="font-semibold text-slate-900">{stockData.price_to_book?.toFixed(2) || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700">PEG Ratio</span>
-                  <span className="font-semibold text-slate-900">{stockData.peg_ratio?.toFixed(2) || 'N/A'}</span>
-                </div>
+                <MetricRow label="P/E Ratio" value={stockData.pe_ratio} />
+                <MetricRow label="Forward P/E" value={stockData.forward_pe} />
+                <MetricRow label="P/B Ratio" value={stockData.price_to_book} />
+                <MetricRow label="PEG Ratio" value={stockData.peg_ratio} />
               </div>
-            </div>
+            </MetricCard>
           </div>
 
           {/* Financial Health */}
-          <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-6">
-            <h3 className="text-xl font-bold text-blue-900 mb-4">Financial Health</h3>
+          <MetricCard title="Financial Health">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-slate-600">Debt to Equity</p>
-                <p className="font-semibold text-slate-900">{stockData.debt_to_equity?.toFixed(2) || 'N/A'}</p>
+                <p className="font-semibold text-slate-900">
+                  {stockData.debt_to_equity?.toFixed(2) || 'N/A'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-slate-600">ROE</p>
@@ -228,10 +199,12 @@ export default function ValuationPage() {
               </div>
               <div>
                 <p className="text-sm text-slate-600">Beta</p>
-                <p className="font-semibold text-slate-900">{stockData.beta?.toFixed(2) || 'N/A'}</p>
+                <p className="font-semibold text-slate-900">
+                  {stockData.beta?.toFixed(2) || 'N/A'}
+                </p>
               </div>
             </div>
-          </div>
+          </MetricCard>
 
 
           {/* Stock Chart */}
