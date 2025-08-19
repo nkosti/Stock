@@ -62,7 +62,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast.info("Check your email to verify your account");
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Something went wrong";
+      const errorMessage = err instanceof Error ? err.message : "Network error. Please try again.";
       toast.error(errorMessage);
     }
   };
