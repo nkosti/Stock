@@ -1,5 +1,5 @@
 import { TrendingUp } from 'lucide-react'
-import type { StockData } from '../../types/stock'
+import type { StockData } from '@/types'
 
 interface CompanyOverviewProps {
   stockData: StockData
