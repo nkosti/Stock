@@ -51,8 +51,20 @@ async def get_stock_history(
         stock = yf.Ticker(symbol.upper())
         original_period = period
 
+        # Handle 2h timeframe - get 1-minute data for last 2 hours (120 data points)
+        if period == "2h":
+            period = "1d"
+            interval = "1m"
+        # Handle 2d timeframe - get 10-minute data for 2 days
+        elif period == "2d":
+            period = "5d"
+            interval = "5m"
+        # Handle 1w timeframe - get 30-minute data for 1 week
+        elif period == "1w":
+            period = "5d"
+            interval = "30m"
         # Handle 3h timeframe - get 1 day of 15-minute data, then take last 3 hours (12 data points)
-        if period == "3h":
+        elif period == "3h":
             period = "1d"
             interval = "15m"
         # Handle 1m timeframe for 1-minute data (only available for current day)
@@ -65,6 +77,7 @@ async def get_stock_history(
             period = "2d"  # Get 2 days to ensure we have recent trading day data
             interval = "1m"  # 1-minute intervals for detailed intraday view
 
+        print(f"DEBUG: symbol={symbol}, original_period={original_period}, final_period={period}, interval={interval}")
         hist = stock.history(period=period, interval=interval)
 
         if hist.empty:
@@ -81,8 +94,25 @@ async def get_stock_history(
                 most_recent_date = hist.index[-1].date()
                 hist = hist[hist.index.date == most_recent_date]
 
+        # For 2h timeframe, limit to last 2 hours of trading data (120 intervals of 1 minute)
+        if original_period == "2h":
+            # Get the most recent 2 hours of actual trading data
+            hist = hist.dropna(subset=["Close"])
+            if not hist.empty:
+                # Get the most recent timestamp and go back 2 hours from there
+                latest_time = hist.index[-1]
+                two_hours_ago = latest_time - pd.Timedelta(hours=2)
+                hist = hist[hist.index >= two_hours_ago]
+        # For 2d timeframe, limit to last 2 days of trading data (10-minute intervals)
+        elif original_period == "2d":
+            # Get last 2 days of 5-minute data (limited subset)
+            hist = hist.dropna(subset=["Close"]).tail(192)  # ~2 days of 5-min intervals
+        # For 1w timeframe, limit to last week of trading data (30-minute intervals)
+        elif original_period == "1w":
+            # Get last week of 30-minute data from 5d period
+            hist = hist.dropna(subset=["Close"])  # Use all available data from 5d period
         # For 3h timeframe, limit to last 3 hours of trading data (12 intervals of 15 minutes)
-        if original_period == "3h":
+        elif original_period == "3h":
             # Get last 3 hours that have data (12 intervals of 15 minutes each)
             hist = hist.dropna(subset=["Close"]).tail(12)
         # For 1m timeframe, limit to last 180 minutes (3 hours of 1-minute data)

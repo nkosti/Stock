@@ -13,9 +13,7 @@ app = FastAPI(title="Stock Valuation API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
         "http://localhost:3001",
-        "http://localhost:3002",
     ],
     allow_credentials=True,
     allow_methods=["*"],
