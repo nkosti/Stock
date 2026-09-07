@@ -157,6 +157,8 @@ async def calculate_black_scholes(inputs: BlackScholesInputs) -> Dict:
             },
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error calculating option price: {str(e)}"
@@ -230,6 +232,8 @@ async def calculate_implied_volatility(
             },
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error calculating implied volatility: {str(e)}"

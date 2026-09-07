@@ -129,6 +129,8 @@ async def calculate_dcf(inputs: DCFInputs) -> Dict:
             "pv_terminal_value": round(pv_terminal, 0),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating DCF: {str(e)}")
 
@@ -166,6 +168,8 @@ async def get_valuation_ratios(symbol: str) -> Dict:
             "enterprise_value": ev,
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching valuation ratios: {str(e)}"
@@ -223,6 +227,8 @@ async def get_peer_comparison(symbol: str) -> Dict:
             },
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error performing peer comparison: {str(e)}"

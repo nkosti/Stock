@@ -37,6 +37,8 @@ async def get_stock_info(symbol: str) -> Dict:
             "52_week_high": info.get("fiftyTwoWeekHigh"),
             "52_week_low": info.get("fiftyTwoWeekLow"),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching stock data: {str(e)}"
@@ -77,7 +79,9 @@ async def get_stock_history(
             period = "2d"  # Get 2 days to ensure we have recent trading day data
             interval = "1m"  # 1-minute intervals for detailed intraday view
 
-        print(f"DEBUG: symbol={symbol}, original_period={original_period}, final_period={period}, interval={interval}")
+        print(
+            f"DEBUG: symbol={symbol}, original_period={original_period}, final_period={period}, interval={interval}"
+        )
         hist = stock.history(period=period, interval=interval)
 
         if hist.empty:
@@ -110,7 +114,9 @@ async def get_stock_history(
         # For 1w timeframe, limit to last week of trading data (30-minute intervals)
         elif original_period == "1w":
             # Get last week of 30-minute data from 5d period
-            hist = hist.dropna(subset=["Close"])  # Use all available data from 5d period
+            hist = hist.dropna(
+                subset=["Close"]
+            )  # Use all available data from 5d period
         # For 3h timeframe, limit to last 3 hours of trading data (12 intervals of 15 minutes)
         elif original_period == "3h":
             # Get last 3 hours that have data (12 intervals of 15 minutes each)
@@ -140,6 +146,8 @@ async def get_stock_history(
             hist["Date"] = hist["Date"].dt.strftime("%Y-%m-%d")
 
         return {"symbol": symbol.upper(), "data": hist.to_dict(orient="records")}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching historical data: {str(e)}"
@@ -173,6 +181,8 @@ async def get_financials(symbol: str) -> Dict:
         }
 
         return {"symbol": symbol.upper(), "financials": financials}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching financial data: {str(e)}"
