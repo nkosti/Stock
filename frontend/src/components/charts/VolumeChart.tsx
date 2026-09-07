@@ -10,8 +10,10 @@ import {
   Cell
 } from 'recharts'
 
+import type { ProcessedChartData } from '@/hooks/useChartData'
+
 interface VolumeChartProps {
-  data: any[]
+  data: ProcessedChartData[]
   selectedTimeframe: string
 }
 

@@ -1,5 +1,7 @@
+import type { ProcessedChartData } from '@/hooks/useChartData'
+
 interface StaticTooltipProps {
-  tooltipData: any | null
+  tooltipData: ProcessedChartData | null
   tooltipPosition: 'left' | 'right'
 }
 
@@ -11,32 +13,32 @@ export default function StaticTooltip({ tooltipData, tooltipPosition }: StaticTo
   return (
     <div className={`absolute ${positionClass} bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs min-w-32 z-10 transition-all duration-300 ease-in-out`}>
       <div className="space-y-1">
-        {(tooltipData.open || tooltipData.Open) && (
+        {tooltipData.open > 0 && (
           <div className="flex justify-between gap-4">
             <span className="font-medium text-gray-900">Open:</span>
-            <span className="text-gray-900">${(tooltipData.open || tooltipData.Open).toFixed(2)}</span>
+            <span className="text-gray-900">${tooltipData.open.toFixed(2)}</span>
           </div>
         )}
-        {(tooltipData.high || tooltipData.High) && (
+        {tooltipData.high > 0 && (
           <div className="flex justify-between gap-4">
             <span className="font-medium text-gray-900">High:</span>
-            <span className="text-green-600">${(tooltipData.high || tooltipData.High).toFixed(2)}</span>
+            <span className="text-green-600">${tooltipData.high.toFixed(2)}</span>
           </div>
         )}
-        {(tooltipData.low || tooltipData.Low) && (
+        {tooltipData.low > 0 && (
           <div className="flex justify-between gap-4">
             <span className="font-medium text-gray-900">Low:</span>
-            <span className="text-red-600">${(tooltipData.low || tooltipData.Low).toFixed(2)}</span>
+            <span className="text-red-600">${tooltipData.low.toFixed(2)}</span>
           </div>
         )}
         <div className="flex justify-between gap-4">
           <span className="font-medium text-gray-900">Close:</span>
-          <span className="text-gray-900">${(tooltipData.close || tooltipData.price || tooltipData.Close).toFixed(2)}</span>
+          <span className="text-gray-900">${(tooltipData.close || tooltipData.price).toFixed(2)}</span>
         </div>
-        {(tooltipData.volume || tooltipData.Volume) && (
+        {tooltipData.volume > 0 && (
           <div className="flex justify-between gap-4">
             <span className="font-medium text-gray-900">Volume:</span>
-            <span className="text-gray-900">{(tooltipData.volume || tooltipData.Volume).toLocaleString()}</span>
+            <span className="text-gray-900">{tooltipData.volume.toLocaleString()}</span>
           </div>
         )}
       </div>

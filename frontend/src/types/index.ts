@@ -63,7 +63,7 @@ export interface ChartConfig {
 
 export interface ChartInteractionState {
   crosshair: { x: string | number; y: number } | null
-  tooltip: any | null
+  tooltip: Record<string, unknown> | null
   mousePosition: { x: number; y: number } | null
 }
 
@@ -77,7 +77,7 @@ export interface ApiResponse<T> {
   message?: string
 }
 
-export interface StockInfoResponse extends StockData {}
+export type StockInfoResponse = StockData
 
 export interface StockHistoryResponse {
   symbol: string
@@ -86,7 +86,7 @@ export interface StockHistoryResponse {
 
 export interface ApiError extends Error {
   status: number
-  data?: any
+  data?: unknown
 }
 
 // =============================================================================

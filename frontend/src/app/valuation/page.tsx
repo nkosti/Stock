@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, Calculator } from 'lucide-react'
 import EnhancedStockChart from '@/components/charts/EnhancedStockChart'
@@ -9,7 +9,7 @@ import MetricCard from '@/components/valuation/MetricCard'
 import MetricRow from '@/components/valuation/MetricRow'
 import type { StockData, ChartData } from '@/types'
 
-export default function ValuationPage() {
+function ValuationContent() {
   const searchParams = useSearchParams()
   const [symbol, setSymbol] = useState('')
   const [stockData, setStockData] = useState<StockData | null>(null)
@@ -214,5 +214,13 @@ export default function ValuationPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ValuationPage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-8">Loading...</div>}>
+      <ValuationContent />
+    </Suspense>
   )
 }

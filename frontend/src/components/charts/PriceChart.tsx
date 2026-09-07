@@ -13,13 +13,15 @@ import {
   ReferenceLine
 } from 'recharts'
 import type { ChartType } from '@/types'
+import type { ProcessedChartData } from '@/hooks/useChartData'
+import type { ChartMouseMoveHandler } from '@/hooks/useChartInteractions'
 
 interface PriceChartProps {
-  data: any[]
+  data: ProcessedChartData[]
   chartType: ChartType
   selectedTimeframe: string
   crosshair: {x: string | number, y: number} | null
-  onMouseMove: (e: any, event?: any) => void
+  onMouseMove: ChartMouseMoveHandler
   onMouseLeave: () => void
 }
 
@@ -77,8 +79,8 @@ export default function PriceChart({
         }
         return ticks;
       })() : undefined,
-    tickFormatter: ['2h', '1d', '2d'].includes(selectedTimeframe) ? 
-      (value: any) => new Date(value).toLocaleTimeString('en-US', { 
+    tickFormatter: ['2h', '1d', '2d'].includes(selectedTimeframe) ?
+      (value: number | string) => new Date(Number(value)).toLocaleTimeString('en-US', {
         hour: '2-digit', 
         minute: '2-digit',
         hour12: false 

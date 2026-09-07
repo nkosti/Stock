@@ -1,9 +1,7 @@
-import type { 
-  StockData, 
-  ChartData, 
-  StockInfoResponse, 
-  StockHistoryResponse, 
-  ApiError 
+import type {
+  StockInfoResponse,
+  StockHistoryResponse,
+  ApiError
 } from '@/types'
 
 // Configuration
@@ -12,9 +10,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 // Custom API Error class
 export class ApiErrorClass extends Error implements ApiError {
   status: number
-  data?: any
+  data?: unknown
 
-  constructor(message: string, status: number, data?: any) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message)
     this.name = 'ApiError'
     this.status = status
@@ -54,11 +52,11 @@ export class ApiClient {
 
       if (!response.ok) {
         let errorMessage = 'Something went wrong'
-        let errorData: any = null
+        let errorData: { detail?: string; message?: string } | null = null
 
         try {
           errorData = await response.json()
-          errorMessage = errorData.detail || errorData.message || errorMessage
+          errorMessage = errorData?.detail || errorData?.message || errorMessage
         } catch {
           // If response is not JSON, use default error message
           errorMessage = `HTTP ${response.status}: ${response.statusText}`

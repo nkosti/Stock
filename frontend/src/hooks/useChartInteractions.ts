@@ -1,21 +1,31 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import type { SyntheticEvent } from 'react'
 import type { ProcessedChartData } from './useChartData'
 
 export interface ChartInteractionState {
   crosshair: { x: string | number; y: number } | null
-  tooltipData: any | null
+  tooltipData: ProcessedChartData | null
   mousePosition: { x: number; y: number } | null
   tooltipPosition: 'left' | 'right'
 }
 
+// Shape of the state recharts passes to chart-level mouse handlers
+export interface ChartMouseState {
+  activeLabel?: string | number
+  activeIndex?: string | number | null
+  activePayload?: Array<{ value?: unknown; payload?: ProcessedChartData }>
+}
+
+export type ChartMouseMoveHandler = (
+  e: ChartMouseState,
+  event?: SyntheticEvent
+) => void
+
 export function useChartInteractions(chartData: ProcessedChartData[]) {
   const [crosshair, setCrosshair] = useState<{ x: string | number; y: number } | null>(null)
-  const [tooltipData, setTooltipData] = useState<any>(null)
+  const [tooltipData, setTooltipData] = useState<ProcessedChartData | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<'left' | 'right'>('left')
-  
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
-  const lastCrosshairUpdate = useRef<{ x: string | number; y: number } | null>(null)
 
   // Check for crosshair/tooltip collision and update position
   useEffect(() => {
@@ -51,35 +61,39 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
   }, [])
 
   // Handle mouse events for crosshair - optimized to prevent unnecessary re-renders
-  const handleMouseMove = useCallback((e: any, event?: any) => {
+  const handleMouseMove = useCallback<ChartMouseMoveHandler>((e, event) => {
     // Track actual mouse position for tooltip collision detection (throttled)
-    if (event && event.nativeEvent) {
-      const rect = event.nativeEvent.currentTarget?.getBoundingClientRect?.()
+    if (event && event.nativeEvent instanceof MouseEvent) {
+      const rect = (event.currentTarget as Element | null)?.getBoundingClientRect?.()
       if (rect) {
         const x = event.nativeEvent.clientX - rect.left
         const y = event.nativeEvent.clientY - rect.top
         updateMousePosition(x, y)
       }
     }
-    
-    let yValue = null
-    let newX = null
-    let newY = null
-    let tooltipPayload = null
+
+    let yValue: number | null | undefined = null
+    let newX: string | number | null = null
+    let newY: number | null = null
+    let tooltipPayload: ProcessedChartData | null = null
     
     if (e && e.activeLabel !== undefined) {
       if (e.activePayload && e.activePayload.length > 0) {
-        yValue = e.activePayload[0].payload?.price || e.activePayload[0].payload?.close || e.activePayload[0].value
+        const payloadValue = e.activePayload[0].value
+        yValue =
+          e.activePayload[0].payload?.price ||
+          e.activePayload[0].payload?.close ||
+          (typeof payloadValue === 'number' ? payloadValue : undefined)
         newX = e.activeLabel
-        newY = yValue
-        tooltipPayload = e.activePayload[0].payload
-      } else if (e.activeIndex !== undefined && chartData && chartData.length > 0) {
+        newY = yValue ?? null
+        tooltipPayload = e.activePayload[0].payload ?? null
+      } else if (e.activeIndex !== undefined && e.activeIndex !== null && chartData && chartData.length > 0) {
         const index = typeof e.activeIndex === 'string' ? parseInt(e.activeIndex) : e.activeIndex
         if (index >= 0 && index < chartData.length) {
           const dataPoint = chartData[index]
           yValue = dataPoint.close
           newX = e.activeLabel
-          newY = yValue
+          newY = yValue ?? null
           tooltipPayload = dataPoint
         }
       }

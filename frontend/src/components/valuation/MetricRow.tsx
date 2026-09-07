@@ -1,6 +1,6 @@
 interface MetricRowProps {
   label: string
-  value: string | number
+  value: string | number | null | undefined
   isHighlighted?: boolean
   isPercentage?: boolean
   prefix?: string
