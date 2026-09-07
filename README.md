@@ -2,6 +2,12 @@
 
 A comprehensive web application for stock valuation, options pricing, and portfolio analysis built with React/Next.js and Python FastAPI.
 
+## Screenshots
+
+| Landing | Stock Valuation | Options Pricing |
+|---|---|---|
+| ![Landing page](docs/screenshots/landing.png) | ![Stock valuation with live data](docs/screenshots/valuation.png) | ![Black-Scholes calculator](docs/screenshots/options.png) |
+
 ## Features
 
 - **Stock Valuation**: DCF models, P/E ratios, fundamental analysis with real-time data
@@ -106,13 +112,13 @@ The frontend will be available at: `http://localhost:3000`
 ```
 Stock/
 ├── README.md
-├── main.py                 # FastAPI main application
-├── venv/                   # Python virtual environment
 ├── backend/
+│   ├── main.py             # FastAPI main application
 │   ├── routers/
 │   │   ├── stocks.py       # Stock data API endpoints
 │   │   ├── options.py      # Options pricing endpoints
 │   │   └── valuation.py    # Valuation endpoints
+│   └── tests/              # API tests (pytest)
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
@@ -124,8 +130,9 @@ Stock/
 │   │   └── components/
 │   │       ├── layout/     # Header, navigation
 │   │       └── charts/     # Chart components
-│   ├── package.json
-│   └── tailwind.config.js
+│   ├── e2e/                # Playwright end-to-end tests
+│   ├── playwright.config.ts
+│   └── package.json
 ```
 
 ## API Endpoints
@@ -176,6 +183,29 @@ No environment variables are required for basic setup. The application uses defa
 
 - **Frontend**: Uses TypeScript with strict mode, ESLint, and Prettier
 - **Backend**: Follows Python PEP 8 standards with FastAPI conventions
+
+### Testing
+
+**Backend API tests** (pytest + FastAPI TestClient; market data is mocked, so no network needed):
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest
+```
+
+Covers Black-Scholes pricing against reference values, put-call parity, Greeks bounds,
+implied-volatility round-trips, input validation, and DCF valuation consistency.
+
+**End-to-end tests** (Playwright; starts both servers automatically):
+
+```bash
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+```
+
+Both suites run in CI on every push and pull request.
 
 ## Troubleshooting
 
