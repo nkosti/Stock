@@ -39,8 +39,8 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
   const { crosshair, tooltipData, tooltipPosition, pointer, handleMouseMove, handleMouseLeave } = useChartInteractions(chartData)
   const chartAreaRef = useRef<HTMLDivElement>(null)
 
-  // Price axis domain: 2% headroom above, 35% padding below so the price
-  // line stays clear of the volume bars sharing the same plot
+  // Price axis domain: 2% headroom above, 42% padding below so the price
+  // line bottoms out a little above the price/volume divider
   const { priceDomain, priceTicks } = useMemo<{
     priceDomain: [number, number] | null
     priceTicks: number[] | null
@@ -61,7 +61,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
       (_, i) => min + ((i + 1) * (max - min)) / (tickCount - 1)
     )
     return {
-      priceDomain: [min - range * 0.35, max + range * 0.02],
+      priceDomain: [min - range * 0.42, max + range * 0.02],
       priceTicks: max > min ? ticks : [min]
     }
   }, [chartData, chartType])
@@ -79,9 +79,10 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
     const plotHeight = height - PLOT_TOP - PLOT_BOTTOM_RESERVED
     if (plotHeight <= 0) return null
     const fraction = Math.min(Math.max((pointer.y - PLOT_TOP) / plotHeight, 0), 1)
-    const volume = maxVolume * VOLUME_HEADROOM * (1 - fraction)
-    if (maxVolume > 0 && volume <= maxVolume * 1.02) {
-      return formatVolume(Math.max(volume, 0))
+    // Below the divider the pill reads volume, above it - price
+    if (maxVolume > 0 && fraction >= 0.75) {
+      const volume = maxVolume * VOLUME_HEADROOM * (1 - fraction)
+      return formatVolume(Math.min(Math.max(volume, 0), maxVolume))
     }
     const [minD, maxD] = priceDomain
     const price = maxD - fraction * (maxD - minD)
@@ -151,8 +152,8 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
         {/* Volume scale marks for the bar zone (the y-axis there belongs to price) */}
         {maxVolume > 0 &&
           [
-            { value: maxVolume, fraction: 0.75 },
-            { value: maxVolume / 2, fraction: 0.875 },
+            { value: maxVolume, fraction: 1 - 1 / VOLUME_HEADROOM },
+            { value: maxVolume / 2, fraction: 1 - 1 / (2 * VOLUME_HEADROOM) },
             { value: 0, fraction: 1 }
           ].map(({ value, fraction }) => (
             <div

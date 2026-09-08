@@ -32,6 +32,15 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
   // y follows the mouse
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null)
 
+  // A new dataset (symbol or timeframe change) invalidates hover state -
+  // stale category labels would resolve to NaN coordinates
+  useEffect(() => {
+    setCrosshair(null)
+    setTooltipData(null)
+    setMousePosition(null)
+    setPointer(null)
+  }, [chartData])
+
   // Check for crosshair/tooltip collision and update position
   useEffect(() => {
     if (crosshair && tooltipData && mousePosition) {

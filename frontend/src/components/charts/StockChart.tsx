@@ -17,9 +17,9 @@ import type { ChartType } from '@/types'
 import type { ProcessedChartData } from '@/hooks/useChartData'
 import type { ChartMouseMoveHandler } from '@/hooks/useChartInteractions'
 
-// Volume bars live on their own hidden axis with 4x headroom,
-// so they occupy roughly the bottom quarter of the shared plot
-export const VOLUME_HEADROOM = 4
+// Volume bars live on their own hidden axis with 4.5x headroom, so the
+// tallest bar tops out a touch below the price/volume divider at 75%
+export const VOLUME_HEADROOM = 4.5
 
 // Hovered bar gets a darker shade of its own color
 const ACTIVE_FILL: Record<string, string> = {
@@ -101,7 +101,7 @@ export default function StockChart({
           domain={[0, (dataMax: number) => dataMax * VOLUME_HEADROOM]}
         />
         <Tooltip content={() => null} cursor={false} />
-        {crosshair && (
+        {crosshair && data.some(d => d.date === crosshair.x) && (
           <ReferenceLine
             yAxisId="price"
             x={crosshair.x}

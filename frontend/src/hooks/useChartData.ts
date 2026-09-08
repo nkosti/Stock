@@ -82,6 +82,18 @@ export function useChartData(data: ChartData | null, selectedTimeframe: string) 
       }
     })
 
+    // Category values must be unique: duplicate labels collapse in the band
+    // scale and produce NaN tick coordinates. Repeats get invisible
+    // zero-width-space suffixes - identical on screen, distinct for the scale.
+    const seen = new Map<string, number>()
+    for (const point of mappedData) {
+      const count = seen.get(point.date) ?? 0
+      seen.set(point.date, count + 1)
+      if (count > 0) {
+        point.date = `${point.date}${'\u200B'.repeat(count)}`
+      }
+    }
+
     return mappedData
   }, [data, selectedTimeframe])
 
