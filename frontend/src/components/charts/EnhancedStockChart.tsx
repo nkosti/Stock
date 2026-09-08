@@ -53,12 +53,11 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
     const max = Math.max(...values)
     const range = max - min || max * 0.01 || 1
     // Ticks only inside the actual price range, so no labels bleed into
-    // the volume region; the lowest tick is skipped - it would sit right on
-    // the price/volume divider where the volume scale label lives
+    // the volume region at the bottom of the shared plot
     const tickCount = 7
     const ticks = Array.from(
-      { length: tickCount - 1 },
-      (_, i) => min + ((i + 1) * (max - min)) / (tickCount - 1)
+      { length: tickCount },
+      (_, i) => min + (i * (max - min)) / (tickCount - 1)
     )
     return {
       priceDomain: [min - range * 0.42, max + range * 0.02],
