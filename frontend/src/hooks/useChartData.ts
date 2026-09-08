@@ -43,11 +43,15 @@ export function useChartData(data: ChartData | null, selectedTimeframe: string) 
       let formattedDate: string
 
       if (['2h', '1d', '2d'].includes(selectedTimeframe)) {
-        formattedDate = date.toLocaleTimeString('en-US', {
+        const time = date.toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
           hour12: false
         })
+        // 2d spans several sessions - prefix the day so labels stay unique
+        formattedDate = selectedTimeframe === '2d'
+          ? `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${time}`
+          : time
       } else if (['2y', '5y', 'max'].includes(selectedTimeframe)) {
         // Include the year: month-day labels repeat across years, which both
         // confuses readers and breaks the category-based crosshair lookup
@@ -61,7 +65,9 @@ export function useChartData(data: ChartData | null, selectedTimeframe: string) 
       }
 
       return {
-        date: ['2h', '1d', '2d'].includes(selectedTimeframe) ? date.getTime() : formattedDate,
+        // Category value: index-position based, so non-trading hours and
+        // overnight gaps don't stretch the time axis
+        date: formattedDate,
         displayDate: formattedDate,
         fullDate: item.Date,
         price: item.Close,

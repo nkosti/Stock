@@ -56,35 +56,14 @@ export default function PriceChart({
     onMouseLeave
   }
 
+  // Category axis: every candle occupies one slot, so non-trading hours and
+  // overnight gaps don't stretch the chart
   const commonXAxisProps = {
     dataKey: "date",
     tick: { fontSize: 12 },
-    interval: ['2h', '1d', '2d'].includes(selectedTimeframe) ? getXAxisInterval(data.length) : getXAxisInterval(data.length),
+    interval: getXAxisInterval(data.length),
     angle: 0,
     textAnchor: "middle" as const,
-    type: ['2h', '1d', '2d'].includes(selectedTimeframe) ? 'number' as const : 'category' as const,
-    scale: ['2h', '1d', '2d'].includes(selectedTimeframe) ? 'time' as const : 'auto' as const,
-    domain: ['2h', '1d', '2d'].includes(selectedTimeframe) ? ['dataMin', 'dataMax'] : undefined,
-    ticks: selectedTimeframe === '1d' ? 
-      (() => {
-        if (data.length === 0) return [];
-        const firstTime = Number(data[0].date);
-        const lastTime = Number(data[data.length - 1].date);
-        const ticks = [];
-        for (let time = firstTime; time <= lastTime; time += 15 * 60 * 1000) {
-          const date = new Date(time);
-          if (date.getMinutes() % 15 === 0) {
-            ticks.push(time);
-          }
-        }
-        return ticks;
-      })() : undefined,
-    tickFormatter: ['2h', '1d', '2d'].includes(selectedTimeframe) ?
-      (value: number | string) => new Date(Number(value)).toLocaleTimeString('en-US', {
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      }) : undefined,
     hide: true
   }
 

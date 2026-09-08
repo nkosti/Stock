@@ -14,10 +14,9 @@ import type { ProcessedChartData } from '@/hooks/useChartData'
 
 interface VolumeChartProps {
   data: ProcessedChartData[]
-  selectedTimeframe: string
 }
 
-export default function VolumeChart({ data, selectedTimeframe }: VolumeChartProps) {
+export default function VolumeChart({ data }: VolumeChartProps) {
   const getXAxisInterval = (dataLength: number) => {
     if (dataLength <= 6) return 0
     return Math.floor(dataLength / 6)
@@ -30,20 +29,10 @@ export default function VolumeChart({ data, selectedTimeframe }: VolumeChartProp
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         syncId="chart"
       >
-        <XAxis 
-          dataKey="date" 
+        <XAxis
+          dataKey="date"
           tick={{ fontSize: 12 }}
-          interval={['2h', '1d', '2d'].includes(selectedTimeframe) ? getXAxisInterval(data.length) : getXAxisInterval(data.length)}
-          type={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'number' : 'category'}
-          scale={['2h', '1d', '2d'].includes(selectedTimeframe) ? 'time' : 'auto'}
-          domain={['2h', '1d', '2d'].includes(selectedTimeframe) ? ['dataMin', 'dataMax'] : undefined}
-          tickFormatter={['2h', '1d', '2d'].includes(selectedTimeframe) ? 
-            (value) => new Date(value).toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: false 
-            }) : undefined
-          }
+          interval={getXAxisInterval(data.length)}
         />
         <YAxis 
           orientation="right"
