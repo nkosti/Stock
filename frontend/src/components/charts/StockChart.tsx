@@ -51,30 +51,6 @@ export default function StockChart({
     return Math.floor(dataLength / 6)
   }
 
-  // Date pill pinned to the top of the crosshair line
-  const CrosshairDateLabel = (props: { viewBox?: { x?: number; y?: number } }) => {
-    if (!crosshair) return null
-    const text = String(crosshair.x)
-    const x = props.viewBox?.x ?? 0
-    const y = props.viewBox?.y ?? 0
-    const width = text.length * 6.5 + 14
-    return (
-      <g>
-        <rect x={x - width / 2} y={y} width={width} height={18} rx={4} fill="#475569" />
-        <text
-          x={x}
-          y={y + 12.5}
-          textAnchor="middle"
-          fill="#fff"
-          fontSize={11}
-          fontWeight={600}
-        >
-          {text}
-        </text>
-      </g>
-    )
-  }
-
   return (
     <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
       <ComposedChart
@@ -131,7 +107,6 @@ export default function StockChart({
             stroke="#666"
             strokeDasharray="2 2"
             strokeWidth={1}
-            label={<CrosshairDateLabel />}
           />
         )}
         <Bar yAxisId="volume" dataKey="volume" opacity={0.8} isAnimationActive={false}>

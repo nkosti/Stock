@@ -48,11 +48,12 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
     const max = Math.max(...values)
     const range = max - min || max * 0.01 || 1
     // Ticks only inside the actual price range, so no labels bleed into
-    // the volume region at the bottom of the shared plot
+    // the volume region; the lowest tick is skipped - it would sit right on
+    // the price/volume divider where the volume scale label lives
     const tickCount = 7
     const ticks = Array.from(
-      { length: tickCount },
-      (_, i) => min + (i * (max - min)) / (tickCount - 1)
+      { length: tickCount - 1 },
+      (_, i) => min + ((i + 1) * (max - min)) / (tickCount - 1)
     )
     return {
       priceDomain: [min - range * 0.35, max + range * 0.02],
@@ -142,6 +143,38 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
           className="pointer-events-none absolute left-0 right-0 border-t border-slate-200/70"
           style={{ top: 'calc(5px + (100% - 40px) * 0.75)' }}
         />
+        {/* Volume scale marks for the bar zone (the y-axis there belongs to price) */}
+        {maxVolume > 0 &&
+          [
+            { value: maxVolume, fraction: 0.75 },
+            { value: maxVolume / 2, fraction: 0.875 },
+            { value: 0, fraction: 1 }
+          ].map(({ value, fraction }) => (
+            <div
+              key={fraction}
+              className="pointer-events-none absolute -translate-y-1/2 text-[10px] text-gray-600 tabular-nums"
+              style={{ left: 'calc(100% - 84px)', top: `calc(5px + (100% - 40px) * ${fraction})` }}
+            >
+              {formatVolume(value)}
+            </div>
+          ))}
+        {pointer && crosshair && (() => {
+          // Date pill at the top of the crosshair, clamped inside the chart
+          const text = String(crosshair.x)
+          const pillWidth = text.length * 6.5 + 14
+          const areaWidth = chartAreaRef.current?.clientWidth ?? 0
+          const left = areaWidth
+            ? Math.min(Math.max(pointer.x, pillWidth / 2 + 2), areaWidth - pillWidth / 2 - 2)
+            : pointer.x
+          return (
+            <div
+              className="pointer-events-none absolute z-10 -translate-x-1/2 rounded bg-slate-600 px-1.5 py-0.5 text-[11px] font-semibold text-white"
+              style={{ top: 0, left }}
+            >
+              {text}
+            </div>
+          )
+        })()}
         {pointer && (
           <>
             {/* Free horizontal crosshair at the mouse height */}
