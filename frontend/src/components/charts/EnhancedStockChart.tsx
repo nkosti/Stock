@@ -112,11 +112,6 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
               className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-gray-500/70"
               style={{ top: pointer.y }}
             />
-            {/* Crosshair center dot: snapped to the candle, riding the mouse height */}
-            <div
-              className="pointer-events-none absolute h-2.5 w-2.5 rounded-full bg-blue-600 border-2 border-white shadow"
-              style={{ left: pointer.x - 5, top: pointer.y - 5 }}
-            />
             {pointerPrice !== null && (
               <div
                 className="pointer-events-none absolute right-0 -translate-y-1/2 rounded bg-slate-600 px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums"
