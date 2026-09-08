@@ -1,13 +1,14 @@
 'use client'
 
-import { 
-  ResponsiveContainer, 
+import {
+  ResponsiveContainer,
   BarChart,
   Bar,
-  XAxis, 
-  YAxis, 
+  XAxis,
+  YAxis,
   Tooltip,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts'
 
 import type { ProcessedChartData } from '@/hooks/useChartData'
@@ -47,15 +48,19 @@ export default function VolumeChart({ data, activeDate, onMouseMove, onMouseLeav
           tick={{ fontSize: 12 }}
           interval={getXAxisInterval(data.length)}
         />
-        <YAxis 
+        <YAxis
           orientation="right"
           tick={{ fontSize: 10 }}
+          domain={[0, 'dataMax']}
           tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           axisLine={false}
         />
         {/* The hovered bar is emphasized via its fill; the synced cursor band
             lands half a slot off with the band-scaled price chart, so it stays disabled */}
         <Tooltip content={() => null} cursor={false} />
+        {activeDate !== null && (
+          <ReferenceLine x={activeDate} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
+        )}
         <Bar dataKey="volume" opacity={0.8} isAnimationActive={false}>
           {data.map((entry, index) => (
             <Cell

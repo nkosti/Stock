@@ -8,7 +8,7 @@ import ChartHeader from './ChartHeader'
 import ChartControls from './ChartControls'
 import PriceChart from './PriceChart'
 import VolumeChart from './VolumeChart'
-import StaticTooltip from './StaticTooltip'
+import StaticTooltip, { formatVolume } from './StaticTooltip'
 
 export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', onTimeframeChange }: EnhancedStockChartProps) {
   const [chartType, setChartType] = useState<ChartType>('line')
@@ -28,8 +28,9 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
 
   // Use custom hooks for data processing and interactions
   const { chartData, priceStats } = useChartData(data, selectedTimeframe)
-  const { crosshair, tooltipData, tooltipPosition, pointer, handleMouseMove, handleVolumeMouseMove, handleMouseLeave } = useChartInteractions(chartData)
+  const { crosshair, tooltipData, tooltipPosition, pointer, volumePointer, handleMouseMove, handleVolumeMouseMove, handleMouseLeave } = useChartInteractions(chartData)
   const priceAreaRef = useRef<HTMLDivElement>(null)
+  const volumeAreaRef = useRef<HTMLDivElement>(null)
 
   // Y-axis domain mirror of the chart config: dataMin * 0.99 .. dataMax * 1.01
   const priceDomain = useMemo<[number, number] | null>(() => {
@@ -51,6 +52,22 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
     const price = maxD - ((pointer.y - plotTop) / plotHeight) * (maxD - minD)
     return Math.min(Math.max(price, minD), maxD)
   }, [pointer, priceDomain])
+
+  const maxVolume = useMemo(
+    () => (chartData.length ? Math.max(...chartData.map(d => d.volume)) : 0),
+    [chartData]
+  )
+
+  // Volume at the mouse height on the volume pane (5px margins + 30px x-axis strip)
+  const pointerVolume = useMemo(() => {
+    if (!volumePointer || !maxVolume) return null
+    const height = volumeAreaRef.current?.clientHeight ?? 96
+    const plotTop = 5
+    const plotHeight = height - 5 - 30 - plotTop
+    if (plotHeight <= 0) return null
+    const volume = maxVolume * (1 - (volumePointer.y - plotTop) / plotHeight)
+    return Math.min(Math.max(volume, 0), maxVolume)
+  }, [volumePointer, maxVolume])
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
@@ -124,13 +141,30 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
         )}
       </div>
 
-      <div className="h-24 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
+      <div ref={volumeAreaRef} className="relative h-24 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
         <VolumeChart
           data={chartData}
           activeDate={crosshair?.x ?? null}
           onMouseMove={handleVolumeMouseMove}
           onMouseLeave={handleMouseLeave}
         />
+        {volumePointer && (
+          <>
+            {/* Free horizontal crosshair at the mouse height on the volume pane */}
+            <div
+              className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-gray-500/70"
+              style={{ top: volumePointer.y }}
+            />
+            {pointerVolume !== null && (
+              <div
+                className="pointer-events-none absolute right-0 -translate-y-1/2 rounded bg-slate-600 px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums"
+                style={{ top: volumePointer.y }}
+              >
+                {formatVolume(pointerVolume)}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div className="mt-4 text-xs text-gray-500 flex justify-between">

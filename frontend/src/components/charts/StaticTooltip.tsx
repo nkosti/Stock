@@ -5,7 +5,7 @@ interface StaticTooltipProps {
   tooltipPosition: 'left' | 'right'
 }
 
-const formatVolume = (volume: number) => {
+export const formatVolume = (volume: number) => {
   if (volume >= 1_000_000_000) return `${(volume / 1_000_000_000).toFixed(1)}B`
   if (volume >= 1_000_000) return `${(volume / 1_000_000).toFixed(1)}M`
   if (volume >= 1_000) return `${(volume / 1_000).toFixed(1)}K`

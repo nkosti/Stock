@@ -28,9 +28,10 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
   const [tooltipData, setTooltipData] = useState<ProcessedChartData | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<'left' | 'right'>('left')
-  // Pixel position of the free crosshair center on the price pane:
+  // Pixel position of the free crosshair on each pane:
   // x snaps to the hovered candle, y follows the mouse
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null)
+  const [volumePointer, setVolumePointer] = useState<{ x: number; y: number } | null>(null)
 
   // Check for crosshair/tooltip collision and update position
   useEffect(() => {
@@ -78,10 +79,14 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
         }
       }
 
-      if (withPointer && mouseY !== null && typeof e?.activeCoordinate?.x === 'number') {
-        setPointer({ x: e.activeCoordinate.x, y: mouseY })
-      } else if (!withPointer) {
-        setPointer(null)
+      if (mouseY !== null && typeof e?.activeCoordinate?.x === 'number') {
+        if (withPointer) {
+          setPointer({ x: e.activeCoordinate.x, y: mouseY })
+          setVolumePointer(null)
+        } else {
+          setVolumePointer({ x: e.activeCoordinate.x, y: mouseY })
+          setPointer(null)
+        }
       }
 
       let yValue: number | null | undefined = null
@@ -141,6 +146,7 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
     setTooltipData(null)
     setMousePosition(null)
     setPointer(null)
+    setVolumePointer(null)
     setTooltipPosition('left')
   }, [])
 
@@ -150,6 +156,7 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
     mousePosition,
     tooltipPosition,
     pointer,
+    volumePointer,
     handleMouseMove,
     handleVolumeMouseMove,
     handleMouseLeave
