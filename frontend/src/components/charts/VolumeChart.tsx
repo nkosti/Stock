@@ -24,10 +24,11 @@ export default function VolumeChart({ data }: VolumeChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
-      <BarChart 
-        data={data} 
+      <BarChart
+        data={data}
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         syncId="chart"
+        barCategoryGap="15%"
       >
         <XAxis
           dataKey="date"
@@ -40,7 +41,8 @@ export default function VolumeChart({ data }: VolumeChartProps) {
           tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           axisLine={false}
         />
-        <Tooltip content={() => null} cursor={false} />
+        {/* Soft one-slot highlight that follows the crosshair over the bars */}
+        <Tooltip content={() => null} cursor={{ fill: '#94a3b8', fillOpacity: 0.25 }} />
         <Bar dataKey="volume" opacity={0.8} isAnimationActive={false}>
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.volumeColor} />

@@ -53,6 +53,7 @@ def fake_yfinance(monkeypatch):
         ("3m", "3mo", "1d"),
         ("6m", "6mo", "1d"),
         ("1y", "1y", "1d"),
+        ("ytd", "ytd", "1d"),
     ],
 )
 def test_ui_timeframes_map_to_valid_yfinance_args(

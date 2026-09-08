@@ -11,6 +11,7 @@ const timeframeButtons = [
   { key: '1mo', label: '1m' },
   { key: '3mo', label: '3m' },
   { key: '6mo', label: '6m' },
+  { key: 'ytd', label: 'YTD' },
   { key: '1y', label: '1y' },
   { key: '2y', label: '2y' },
   { key: '5y', label: '5y' },
