@@ -57,22 +57,32 @@ async def get_stock_history(
         if period == "2h":
             period, interval = "1d", "1m"
         elif period == "2d":
+            # yfinance has no 10m interval - fetch 5m and resample below
             period, interval = "5d", "5m"
         elif period == "1w":
             period, interval = "5d", "30m"
         elif period == "3h":
             period, interval = "1d", "15m"
-        elif period == "1m":
-            period, interval = "1mo", "1d"
-        elif period == "3m":
-            period, interval = "3mo", "1d"
-        elif period == "6m":
+        elif period in ("1m", "1mo"):
+            # 30m bars are only served for the last 60 days, which covers a month
+            period, interval = "1mo", "30m"
+        elif period in ("3m", "3mo"):
+            # 30m data is capped at 60 days, so use the hourly grid and keep
+            # two session snapshots per day (filtered below)
+            period, interval = "3mo", "1h"
+        elif period in ("6m", "6mo"):
             period, interval = "6mo", "1d"
+        elif period == "ytd":
+            interval = "1d"  # thinned to every 2nd day later in the year
+        elif period in ("1y", "2y"):
+            interval = "1wk"
+        elif period == "5y":
+            interval = "1mo"
 
         # Handle 1-day requests - get intraday data for the current trading day
         if original_period == "1d":
             period = "2d"  # Get 2 days to ensure we have recent trading day data
-            interval = "1m"  # 1-minute intervals for detailed intraday view
+            interval = "5m"  # 5-minute intervals for the intraday view
 
         hist = stock.history(period=period, interval=interval)
 
@@ -99,16 +109,39 @@ async def get_stock_history(
                 latest_time = hist.index[-1]
                 two_hours_ago = latest_time - pd.Timedelta(hours=2)
                 hist = hist[hist.index >= two_hours_ago]
-        # For 2d timeframe, limit to last 2 days of trading data (10-minute intervals)
+        # For 2d timeframe: resample 5m bars into 10m candles, keep last 2 sessions
         elif original_period == "2d":
-            # Get last 2 days of 5-minute data (limited subset)
-            hist = hist.dropna(subset=["Close"]).tail(192)  # ~2 days of 5-min intervals
+            hist = hist.dropna(subset=["Close"])
+            hist = (
+                hist.resample("10min")
+                .agg(
+                    {
+                        "Open": "first",
+                        "High": "max",
+                        "Low": "min",
+                        "Close": "last",
+                        "Volume": "sum",
+                    }
+                )
+                .dropna(subset=["Close"])
+            )
+            last_days = sorted(set(hist.index.date))[-2:]
+            hist = hist[[d in last_days for d in hist.index.date]]
         # For 1w timeframe, limit to last week of trading data (30-minute intervals)
         elif original_period == "1w":
             # Get last week of 30-minute data from 5d period
             hist = hist.dropna(
                 subset=["Close"]
             )  # Use all available data from 5d period
+        # For 3m: keep two snapshots per session - the open and three hours in
+        elif original_period in ("3m", "3mo"):
+            hist = hist.dropna(subset=["Close"])
+            hist = hist[hist.index.strftime("%H:%M").isin(["09:30", "12:30"])]
+        # For ytd: thin to every 2nd trading day once the year is over ~7 months in
+        elif original_period == "ytd":
+            hist = hist.dropna(subset=["Close"])
+            if len(hist) > 1 and (hist.index[-1] - hist.index[0]).days > 213:
+                hist = hist.iloc[::-2][::-1]  # every 2nd day, keeping the latest bar
         # For 3h timeframe, limit to last 3 hours of trading data (12 intervals of 15 minutes)
         elif original_period == "3h":
             # Get last 3 hours that have data (12 intervals of 15 minutes each)

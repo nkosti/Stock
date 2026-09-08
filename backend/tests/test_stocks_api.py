@@ -47,13 +47,16 @@ def fake_yfinance(monkeypatch):
     "ui_period,expected_period,expected_interval",
     [
         ("2h", "1d", "1m"),
+        ("1d", "2d", "5m"),
         ("2d", "5d", "5m"),
         ("1w", "5d", "30m"),
-        ("1m", "1mo", "1d"),
-        ("3m", "3mo", "1d"),
-        ("6m", "6mo", "1d"),
-        ("1y", "1y", "1d"),
+        ("1mo", "1mo", "30m"),
+        ("3mo", "3mo", "1h"),
+        ("6mo", "6mo", "1d"),
         ("ytd", "ytd", "1d"),
+        ("1y", "1y", "1wk"),
+        ("2y", "2y", "1wk"),
+        ("5y", "5y", "1mo"),
     ],
 )
 def test_ui_timeframes_map_to_valid_yfinance_args(
@@ -77,7 +80,7 @@ def test_intraday_history_formats_datetimes_with_timezone(client):
 
 
 def test_daily_history_formats_dates_only(client):
-    response = client.get("/api/stocks/AAPL/history?period=1m")
+    response = client.get("/api/stocks/AAPL/history?period=6mo")
     assert response.status_code == 200
     dates = [row["Date"] for row in response.json()["data"]]
     assert dates[0] == "2026-08-03"
