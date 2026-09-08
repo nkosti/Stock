@@ -13,7 +13,7 @@ A comprehensive web application for stock valuation, options pricing, and portfo
 - **Stock Valuation**: DCF models, P/E ratios, fundamental analysis with real-time data
 - **Options Pricing**: Black-Scholes model with Greeks calculations (delta, gamma, theta, vega, rho)
 - **Portfolio Analysis**: Track investments and analyze portfolio performance
-- **Interactive Charts**: Multiple timeframes (3h, 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, max) with Poland timezone support
+- **Interactive Charts**: Multiple timeframes (2h, 1d, 2d, 1w, 1m, 3m, 6m, YTD, 1y, 2y, 5y, Max) with CET timezone support
 - **Real-time Data**: Integration with Yahoo Finance API via yfinance library
 
 ## Technology Stack
@@ -153,14 +153,18 @@ Stock/
 
 The application supports multiple timeframes with specific data intervals:
 
-- **3h**: 15-minute intervals (last 3 hours)
-- **1d**: Daily data (last trading day)
-- **5d**: Daily data (5 trading days)
-- **1mo, 3mo, 6mo**: Daily data
-- **1y, 2y, 5y**: Daily data
-- **max**: All available historical data
+- **2h**: 1-minute candles (last 2 trading hours)
+- **1d**: 5-minute candles (last trading day)
+- **2d**: 10-minute candles (resampled from 5m)
+- **1w**: 30-minute candles
+- **1m**: hourly candles
+- **3m**: two session snapshots per day
+- **6m**: daily candles
+- **YTD**: daily candles (thinned to every 2nd day later in the year)
+- **1y, 2y**: weekly candles
+- **5y, Max**: the first trading day of each month
 
-**Note**: Times are displayed in Poland timezone (CET/CEST).
+**Note**: Times are displayed in CET timezone.
 
 ## Data Limitations
 
@@ -220,7 +224,7 @@ Both suites run in CI on every push and pull request.
 
 1. **No chart data**: Some timeframes may not have data on weekends or holidays
 2. **API errors**: Yahoo Finance API may have temporary outages
-3. **Timezone display**: Times automatically convert to Poland timezone (CET/CEST)
+3. **Timezone display**: Times automatically convert to CET timezone
 
 ## Contributing
 
