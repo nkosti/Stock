@@ -9,9 +9,14 @@ import ChartControls from './ChartControls'
 import StockChart, { VOLUME_HEADROOM } from './StockChart'
 import StaticTooltip, { formatVolume } from './StaticTooltip'
 
-// Plot geometry mirrors the chart config: 5px chart margins + 30px x-axis strip
-const PLOT_TOP = 5
+// Plot geometry mirrors the chart config: chart margins (26px on top leaves
+// room for the crosshair date pill) + 30px x-axis strip
+const PLOT_TOP = 26
 const PLOT_BOTTOM_RESERVED = 5 + 30
+const PLOT_RESERVED = PLOT_TOP + PLOT_BOTTOM_RESERVED
+
+const plotFractionTop = (fraction: number) =>
+  `calc(${PLOT_TOP}px + (100% - ${PLOT_RESERVED}px) * ${fraction})`
 
 export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', onTimeframeChange }: EnhancedStockChartProps) {
   const [chartType, setChartType] = useState<ChartType>('line')
@@ -141,7 +146,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
         {/* Subtle static divider between the price and volume regions */}
         <div
           className="pointer-events-none absolute left-0 right-0 border-t border-slate-200/70"
-          style={{ top: 'calc(5px + (100% - 40px) * 0.75)' }}
+          style={{ top: plotFractionTop(0.75) }}
         />
         {/* Volume scale marks for the bar zone (the y-axis there belongs to price) */}
         {maxVolume > 0 &&
@@ -152,8 +157,8 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
           ].map(({ value, fraction }) => (
             <div
               key={fraction}
-              className="pointer-events-none absolute -translate-y-1/2 text-[10px] text-gray-600 tabular-nums"
-              style={{ left: 'calc(100% - 84px)', top: `calc(5px + (100% - 40px) * ${fraction})` }}
+              className="pointer-events-none absolute -translate-y-1/2 text-[12px] text-[#666] tabular-nums"
+              style={{ left: 'calc(100% - 84px)', top: plotFractionTop(fraction) }}
             >
               {formatVolume(value)}
             </div>

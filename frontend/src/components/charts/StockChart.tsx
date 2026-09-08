@@ -55,7 +55,7 @@ export default function StockChart({
     <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
       <ComposedChart
         data={data}
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        margin={{ top: 26, right: 30, left: 20, bottom: 5 }}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
       >
@@ -88,7 +88,8 @@ export default function StockChart({
         <YAxis
           yAxisId="price"
           orientation="right"
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 12, fill: '#666' }}
+          tickLine={false}
           domain={priceDomain ?? ['auto', 'auto']}
           ticks={priceTicks ?? undefined}
           tickFormatter={(value: number) => `$${value.toFixed(2)}`}
