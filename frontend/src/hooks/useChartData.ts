@@ -42,14 +42,15 @@ export function useChartData(data: ChartData | null, selectedTimeframe: string) 
       const date = new Date(item.Date)
       let formattedDate: string
 
-      if (['2h', '1d', '2d'].includes(selectedTimeframe)) {
+      if (['2h', '1d', '2d', '1w'].includes(selectedTimeframe)) {
         const time = date.toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
           hour12: false
         })
-        // 2d spans several sessions - prefix the day so labels stay unique
-        formattedDate = selectedTimeframe === '2d'
+        // 2d/1w span several sessions - prefix the day so labels stay unique;
+        // duplicate category labels break the crosshair and active-dot lookup
+        formattedDate = ['2d', '1w'].includes(selectedTimeframe)
           ? `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${time}`
           : time
       } else if (['2y', '5y', 'max'].includes(selectedTimeframe)) {

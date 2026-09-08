@@ -53,35 +53,27 @@ async def get_stock_history(
         stock = yf.Ticker(symbol.upper())
         original_period = period
 
-        # Handle 2h timeframe - get 1-minute data for last 2 hours (120 data points)
+        # Map UI timeframes to yfinance (period, interval) pairs
         if period == "2h":
-            period = "1d"
-            interval = "1m"
-        # Handle 2d timeframe - get 10-minute data for 2 days
+            period, interval = "1d", "1m"
         elif period == "2d":
-            period = "5d"
-            interval = "5m"
-        # Handle 1w timeframe - get 30-minute data for 1 week
+            period, interval = "5d", "5m"
         elif period == "1w":
-            period = "5d"
-            interval = "30m"
-        # Handle 3h timeframe - get 1 day of 15-minute data, then take last 3 hours (12 data points)
+            period, interval = "5d", "30m"
         elif period == "3h":
-            period = "1d"
-            interval = "15m"
-        # Handle 1m timeframe for 1-minute data (only available for current day)
+            period, interval = "1d", "15m"
         elif period == "1m":
-            period = "1d"
-            interval = "1m"
+            period, interval = "1mo", "1d"
+        elif period == "3m":
+            period, interval = "3mo", "1d"
+        elif period == "6m":
+            period, interval = "6mo", "1d"
 
         # Handle 1-day requests - get intraday data for the current trading day
         if original_period == "1d":
             period = "2d"  # Get 2 days to ensure we have recent trading day data
             interval = "1m"  # 1-minute intervals for detailed intraday view
 
-        print(
-            f"DEBUG: symbol={symbol}, original_period={original_period}, final_period={period}, interval={interval}"
-        )
         hist = stock.history(period=period, interval=interval)
 
         if hist.empty:
@@ -121,10 +113,6 @@ async def get_stock_history(
         elif original_period == "3h":
             # Get last 3 hours that have data (12 intervals of 15 minutes each)
             hist = hist.dropna(subset=["Close"]).tail(12)
-        # For 1m timeframe, limit to last 180 minutes (3 hours of 1-minute data)
-        elif original_period == "1m":
-            # Get last 3 hours of 1-minute data (180 data points)
-            hist = hist.dropna(subset=["Close"]).tail(180)
 
         if hist.empty:
             raise HTTPException(
@@ -133,13 +121,9 @@ async def get_stock_history(
 
         hist.reset_index(inplace=True)
 
-        # Format date based on interval - preserve timezone info for frontend conversion
-        if (
-            interval == "15m"
-            or interval == "1h"
-            or interval == "1m"
-            or interval == "5m"
-        ):
+        # Intraday data comes back with a "Datetime" index, daily data with "Date" -
+        # branch on the actual column so no interval slips through unformatted
+        if "Datetime" in hist.columns:
             # Keep the original datetime with timezone for proper conversion
             hist["Date"] = hist["Datetime"].dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         else:
