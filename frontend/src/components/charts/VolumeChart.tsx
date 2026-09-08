@@ -15,11 +15,18 @@ import type { ChartMouseMoveHandler } from '@/hooks/useChartInteractions'
 
 interface VolumeChartProps {
   data: ProcessedChartData[]
+  activeDate: string | number | null
   onMouseMove: ChartMouseMoveHandler
   onMouseLeave: () => void
 }
 
-export default function VolumeChart({ data, onMouseMove, onMouseLeave }: VolumeChartProps) {
+// Hovered bar gets a darker shade of its own color
+const ACTIVE_FILL: Record<string, string> = {
+  '#10b981': '#047857',
+  '#ef4444': '#b91c1c'
+}
+
+export default function VolumeChart({ data, activeDate, onMouseMove, onMouseLeave }: VolumeChartProps) {
   const getXAxisInterval = (dataLength: number) => {
     if (dataLength <= 6) return 0
     return Math.floor(dataLength / 6)
@@ -46,11 +53,18 @@ export default function VolumeChart({ data, onMouseMove, onMouseLeave }: VolumeC
           tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           axisLine={false}
         />
-        {/* Soft one-slot highlight that follows the crosshair over the bars */}
-        <Tooltip content={() => null} cursor={{ fill: '#94a3b8', fillOpacity: 0.25 }} />
+        {/* Faint slot tint; the hovered bar itself is emphasized via its fill */}
+        <Tooltip content={() => null} cursor={{ fill: '#94a3b8', fillOpacity: 0.1 }} />
         <Bar dataKey="volume" opacity={0.8} isAnimationActive={false}>
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.volumeColor} />
+            <Cell
+              key={`cell-${index}`}
+              fill={
+                entry.date === activeDate
+                  ? ACTIVE_FILL[entry.volumeColor] ?? entry.volumeColor
+                  : entry.volumeColor
+              }
+            />
           ))}
         </Bar>
       </BarChart>

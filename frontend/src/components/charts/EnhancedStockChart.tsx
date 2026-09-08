@@ -88,6 +88,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
       <div className="h-24 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
         <VolumeChart
           data={chartData}
+          activeDate={crosshair?.x ?? null}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         />
