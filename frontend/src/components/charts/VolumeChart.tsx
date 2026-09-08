@@ -11,12 +11,15 @@ import {
 } from 'recharts'
 
 import type { ProcessedChartData } from '@/hooks/useChartData'
+import type { ChartMouseMoveHandler } from '@/hooks/useChartInteractions'
 
 interface VolumeChartProps {
   data: ProcessedChartData[]
+  onMouseMove: ChartMouseMoveHandler
+  onMouseLeave: () => void
 }
 
-export default function VolumeChart({ data }: VolumeChartProps) {
+export default function VolumeChart({ data, onMouseMove, onMouseLeave }: VolumeChartProps) {
   const getXAxisInterval = (dataLength: number) => {
     if (dataLength <= 6) return 0
     return Math.floor(dataLength / 6)
@@ -29,6 +32,8 @@ export default function VolumeChart({ data }: VolumeChartProps) {
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         syncId="chart"
         barCategoryGap="15%"
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
       >
         <XAxis
           dataKey="date"

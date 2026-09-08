@@ -86,7 +86,11 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
       </div>
 
       <div className="h-24 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
-        <VolumeChart data={chartData} />
+        <VolumeChart
+          data={chartData}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        />
       </div>
 
       <div className="mt-4 text-xs text-gray-500 flex justify-between">
