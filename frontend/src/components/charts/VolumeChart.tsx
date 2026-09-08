@@ -51,7 +51,7 @@ export default function VolumeChart({ data, selectedTimeframe }: VolumeChartProp
           tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           axisLine={false}
         />
-        <Tooltip content={() => null} />
+        <Tooltip content={() => null} cursor={false} />
         <Bar dataKey="volume" opacity={0.8} isAnimationActive={false}>
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.volumeColor} />
