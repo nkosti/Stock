@@ -64,8 +64,7 @@ async def get_stock_history(
         elif period == "3h":
             period, interval = "1d", "15m"
         elif period in ("1m", "1mo"):
-            # 30m bars are only served for the last 60 days, which covers a month
-            period, interval = "1mo", "30m"
+            period, interval = "1mo", "1h"
         elif period in ("3m", "3mo"):
             # 30m data is capped at 60 days, so use the hourly grid and keep
             # two session snapshots per day (filtered below)

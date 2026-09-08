@@ -50,7 +50,7 @@ def fake_yfinance(monkeypatch):
         ("1d", "2d", "5m"),
         ("2d", "5d", "5m"),
         ("1w", "5d", "30m"),
-        ("1mo", "1mo", "30m"),
+        ("1mo", "1mo", "1h"),
         ("3mo", "3mo", "1h"),
         ("6mo", "6mo", "1d"),
         ("ytd", "ytd", "1d"),
