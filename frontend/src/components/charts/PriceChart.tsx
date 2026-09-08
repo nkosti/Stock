@@ -105,10 +105,7 @@ export default function PriceChart({
           />
           <XAxis {...commonXAxisProps} />
           <YAxis {...commonYAxisProps} />
-          <Tooltip 
-            content={CustomTooltip}
-            cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
-          />
+          <Tooltip content={CustomTooltip} cursor={false} />
           <Area
             type="monotone"
             dataKey="price"
@@ -138,10 +135,7 @@ export default function PriceChart({
           />
           <XAxis {...commonXAxisProps} />
           <YAxis {...commonYAxisProps} />
-          <Tooltip 
-            content={CustomTooltip}
-            cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
-          />
+          <Tooltip content={CustomTooltip} cursor={false} />
           <Line
             type="monotone"
             dataKey="price"
@@ -170,10 +164,7 @@ export default function PriceChart({
         />
         <XAxis {...commonXAxisProps} />
         <YAxis {...commonYAxisProps} />
-        <Tooltip 
-          content={CustomTooltip}
-          cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
-        />
+        <Tooltip content={CustomTooltip} cursor={false} />
         <Line
           type="monotone"
           dataKey="high"
