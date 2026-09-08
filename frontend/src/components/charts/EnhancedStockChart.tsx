@@ -18,7 +18,7 @@ const PLOT_RESERVED = PLOT_TOP + PLOT_BOTTOM_RESERVED
 const plotFractionTop = (fraction: number) =>
   `calc(${PLOT_TOP}px + (100% - ${PLOT_RESERVED}px) * ${fraction})`
 
-export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', onTimeframeChange }: EnhancedStockChartProps) {
+export default function EnhancedStockChart({ data, symbol, timeframe = 'ytd', onTimeframeChange }: EnhancedStockChartProps) {
   const [chartType, setChartType] = useState<ChartType>('line')
   const [selectedTimeframe, setSelectedTimeframe] = useState(timeframe)
 

@@ -15,7 +15,7 @@ function ValuationContent() {
   const [stockData, setStockData] = useState<StockData | null>(null)
   const [chartData, setChartData] = useState<ChartData | null>(null)
   const [loading, setLoading] = useState(false)
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1mo')
+  const [selectedTimeframe, setSelectedTimeframe] = useState('ytd')
 
   // Auto-search when symbol is provided in URL
   useEffect(() => {
