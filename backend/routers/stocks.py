@@ -76,8 +76,8 @@ async def get_stock_history(
             interval = "1d"  # thinned to every 2nd day later in the year
         elif period in ("1y", "2y"):
             interval = "1wk"
-        elif period == "5y":
-            interval = "1mo"
+        elif period in ("5y", "max"):
+            interval = "1d"  # reduced below to the first trading day of each month
 
         # Handle 1-day requests - get intraday data for the current trading day
         if original_period == "1d":
@@ -142,6 +142,10 @@ async def get_stock_history(
             hist = hist.dropna(subset=["Close"])
             if len(hist) > 1 and (hist.index[-1] - hist.index[0]).days > 213:
                 hist = hist.iloc[::-2][::-1]  # every 2nd day, keeping the latest bar
+        # For 5y/max: keep one candle per month - the first trading day's
+        elif original_period in ("5y", "max"):
+            hist = hist.dropna(subset=["Close"])
+            hist = hist.groupby([hist.index.year, hist.index.month]).head(1)
         # For 3h timeframe, limit to last 3 hours of trading data (12 intervals of 15 minutes)
         elif original_period == "3h":
             # Get last 3 hours that have data (12 intervals of 15 minutes each)

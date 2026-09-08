@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import type { EnhancedStockChartProps, ChartType } from '@/types'
 import { useChartData } from '@/hooks/useChartData'
 import { useChartInteractions } from '@/hooks/useChartInteractions'
@@ -28,7 +28,29 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
 
   // Use custom hooks for data processing and interactions
   const { chartData, priceStats } = useChartData(data, selectedTimeframe)
-  const { crosshair, tooltipData, tooltipPosition, handleMouseMove, handleMouseLeave } = useChartInteractions(chartData)
+  const { crosshair, tooltipData, tooltipPosition, pointer, handleMouseMove, handleVolumeMouseMove, handleMouseLeave } = useChartInteractions(chartData)
+  const priceAreaRef = useRef<HTMLDivElement>(null)
+
+  // Y-axis domain mirror of the chart config: dataMin * 0.99 .. dataMax * 1.01
+  const priceDomain = useMemo<[number, number] | null>(() => {
+    if (!chartData.length) return null
+    const values = chartType === 'candlestick'
+      ? chartData.flatMap(d => [d.price, d.high, d.low])
+      : chartData.map(d => d.price)
+    return [Math.min(...values) * 0.99, Math.max(...values) * 1.01]
+  }, [chartData, chartType])
+
+  // Price at the mouse height, derived from the plot geometry (5px chart margins)
+  const pointerPrice = useMemo(() => {
+    if (!pointer || !priceDomain) return null
+    const height = priceAreaRef.current?.clientHeight ?? 320
+    const plotTop = 5
+    const plotHeight = height - 10
+    if (plotHeight <= 0) return null
+    const [minD, maxD] = priceDomain
+    const price = maxD - ((pointer.y - plotTop) / plotHeight) * (maxD - minD)
+    return Math.min(Math.max(price, minD), maxD)
+  }, [pointer, priceDomain])
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
@@ -74,7 +96,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
         onTimeframeChange={handleTimeframeChange}
       />
 
-      <div className="h-80 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
+      <div ref={priceAreaRef} className="relative h-80 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
         <PriceChart
           data={chartData}
           chartType={chartType}
@@ -83,13 +105,35 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         />
+        {pointer && (
+          <>
+            {/* Free horizontal crosshair at the mouse height */}
+            <div
+              className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-gray-500/70"
+              style={{ top: pointer.y }}
+            />
+            {/* Crosshair center dot: snapped to the candle, riding the mouse height */}
+            <div
+              className="pointer-events-none absolute h-2.5 w-2.5 rounded-full bg-blue-600 border-2 border-white shadow"
+              style={{ left: pointer.x - 5, top: pointer.y - 5 }}
+            />
+            {pointerPrice !== null && (
+              <div
+                className="pointer-events-none absolute right-0 -translate-y-1/2 rounded bg-slate-600 px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums"
+                style={{ top: pointer.y }}
+              >
+                ${pointerPrice.toFixed(2)}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div className="h-24 outline-none focus:outline-none" style={{ outline: 'none !important' }}>
         <VolumeChart
           data={chartData}
           activeDate={crosshair?.x ?? null}
-          onMouseMove={handleMouseMove}
+          onMouseMove={handleVolumeMouseMove}
           onMouseLeave={handleMouseLeave}
         />
       </div>

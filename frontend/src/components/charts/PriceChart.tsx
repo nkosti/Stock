@@ -121,7 +121,6 @@ export default function PriceChart({
           strokeWidth={1}
           label={<CrosshairDateLabel />}
         />
-        <ReferenceLine y={crosshair.y} stroke="#666" strokeDasharray="2 2" strokeWidth={1} />
       </>
     )
   }
@@ -154,7 +153,7 @@ export default function PriceChart({
             fillOpacity={1}
             fill="url(#colorPrice)"
             strokeWidth={2}
-            activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+            activeDot={false}
           />
           {renderCrosshair()}
         </AreaChart>
@@ -183,7 +182,7 @@ export default function PriceChart({
             stroke="#3b82f6" 
             strokeWidth={3}
             dot={false}
-            activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+            activeDot={false}
           />
           {renderCrosshair()}
         </LineChart>
@@ -230,7 +229,7 @@ export default function PriceChart({
           stroke="#3b82f6" 
           strokeWidth={3}
           dot={false}
-          activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+          activeDot={false}
         />
         {renderCrosshair()}
       </LineChart>
