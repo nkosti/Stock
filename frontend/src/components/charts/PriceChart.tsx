@@ -57,13 +57,16 @@ export default function PriceChart({
   }
 
   // Category axis: every candle occupies one slot, so non-trading hours and
-  // overnight gaps don't stretch the chart
+  // overnight gaps don't stretch the chart. The band scale puts line points
+  // at slot centers - the same positions the volume bars occupy - so the
+  // crosshair and the bar highlight line up on both panes.
   const commonXAxisProps = {
     dataKey: "date",
     tick: { fontSize: 12 },
     interval: getXAxisInterval(data.length),
     angle: 0,
     textAnchor: "middle" as const,
+    scale: "band" as const,
     hide: true
   }
 

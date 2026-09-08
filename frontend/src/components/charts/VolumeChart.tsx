@@ -53,8 +53,9 @@ export default function VolumeChart({ data, activeDate, onMouseMove, onMouseLeav
           tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           axisLine={false}
         />
-        {/* Faint slot tint; the hovered bar itself is emphasized via its fill */}
-        <Tooltip content={() => null} cursor={{ fill: '#94a3b8', fillOpacity: 0.1 }} />
+        {/* The hovered bar is emphasized via its fill; the synced cursor band
+            lands half a slot off with the band-scaled price chart, so it stays disabled */}
+        <Tooltip content={() => null} cursor={false} />
         <Bar dataKey="volume" opacity={0.8} isAnimationActive={false}>
           {data.map((entry, index) => (
             <Cell
