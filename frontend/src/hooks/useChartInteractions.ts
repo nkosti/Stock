@@ -28,10 +28,9 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
   const [tooltipData, setTooltipData] = useState<ProcessedChartData | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<'left' | 'right'>('left')
-  // Pixel position of the free crosshair on each pane:
-  // x snaps to the hovered candle, y follows the mouse
+  // Pixel position of the free crosshair: x snaps to the hovered candle,
+  // y follows the mouse
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null)
-  const [volumePointer, setVolumePointer] = useState<{ x: number; y: number } | null>(null)
 
   // Check for crosshair/tooltip collision and update position
   useEffect(() => {
@@ -67,7 +66,7 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
   }, [])
 
   const processMouseMove = useCallback(
-    (e: ChartMouseState, event: SyntheticEvent | undefined, withPointer: boolean) => {
+    (e: ChartMouseState, event: SyntheticEvent | undefined) => {
       // Track actual mouse position for tooltip collision detection (throttled)
       let mouseY: number | null = null
       if (event && event.nativeEvent instanceof MouseEvent) {
@@ -80,13 +79,7 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
       }
 
       if (mouseY !== null && typeof e?.activeCoordinate?.x === 'number') {
-        if (withPointer) {
-          setPointer({ x: e.activeCoordinate.x, y: mouseY })
-          setVolumePointer(null)
-        } else {
-          setVolumePointer({ x: e.activeCoordinate.x, y: mouseY })
-          setPointer(null)
-        }
+        setPointer({ x: e.activeCoordinate.x, y: mouseY })
       }
 
       let yValue: number | null | undefined = null
@@ -129,15 +122,8 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
     [crosshair, chartData, tooltipData, updateMousePosition]
   )
 
-  // Price pane: full crosshair with the free-moving pointer
   const handleMouseMove = useCallback<ChartMouseMoveHandler>(
-    (e, event) => processMouseMove(e, event, true),
-    [processMouseMove]
-  )
-
-  // Volume pane: syncs the candle crosshair but has no pointer of its own
-  const handleVolumeMouseMove = useCallback<ChartMouseMoveHandler>(
-    (e, event) => processMouseMove(e, event, false),
+    (e, event) => processMouseMove(e, event),
     [processMouseMove]
   )
 
@@ -146,7 +132,6 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
     setTooltipData(null)
     setMousePosition(null)
     setPointer(null)
-    setVolumePointer(null)
     setTooltipPosition('left')
   }, [])
 
@@ -156,9 +141,7 @@ export function useChartInteractions(chartData: ProcessedChartData[]) {
     mousePosition,
     tooltipPosition,
     pointer,
-    volumePointer,
     handleMouseMove,
-    handleVolumeMouseMove,
     handleMouseLeave
   }
 }
