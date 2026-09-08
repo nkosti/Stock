@@ -18,10 +18,10 @@ export default function StaticTooltip({ tooltipData, tooltipPosition }: StaticTo
   const positionClass = tooltipPosition === 'left' ? 'top-43 left-4' : 'top-43 right-4'
 
   const rows: Array<{ label: string; value: string; className: string }> = [
-    { label: 'High', value: `$${tooltipData.high.toFixed(2)}`, className: 'text-green-600' },
-    { label: 'Low', value: `$${tooltipData.low.toFixed(2)}`, className: 'text-red-600' },
-    { label: 'Open', value: `$${tooltipData.open.toFixed(2)}`, className: 'text-gray-900' },
-    { label: 'Close', value: `$${(tooltipData.close || tooltipData.price).toFixed(2)}`, className: 'text-gray-900' },
+    { label: 'High', value: tooltipData.high.toFixed(2), className: 'text-green-600' },
+    { label: 'Low', value: tooltipData.low.toFixed(2), className: 'text-red-600' },
+    { label: 'Open', value: tooltipData.open.toFixed(2), className: 'text-gray-900' },
+    { label: 'Close', value: (tooltipData.close || tooltipData.price).toFixed(2), className: 'text-gray-900' },
     { label: 'Volume', value: formatVolume(tooltipData.volume), className: 'text-gray-900' }
   ]
 

@@ -92,7 +92,7 @@ export default function StockChart({
           tickLine={false}
           domain={priceDomain ?? ['auto', 'auto']}
           ticks={priceTicks ?? undefined}
-          tickFormatter={(value: number) => `$${value.toFixed(2)}`}
+          tickFormatter={(value: number) => value.toFixed(2)}
           axisLine={false}
         />
         <YAxis

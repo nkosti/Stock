@@ -85,7 +85,7 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
     }
     const [minD, maxD] = priceDomain
     const price = maxD - fraction * (maxD - minD)
-    return `$${price.toFixed(2)}`
+    return price.toFixed(2)
   }, [pointer, priceDomain, maxVolume])
 
   if (!data || data.length === 0) {
