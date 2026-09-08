@@ -36,15 +36,28 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
 
   // Price axis domain: 2% headroom above, 35% padding below so the price
   // line stays clear of the volume bars sharing the same plot
-  const priceDomain = useMemo<[number, number] | null>(() => {
-    if (!chartData.length) return null
+  const { priceDomain, priceTicks } = useMemo<{
+    priceDomain: [number, number] | null
+    priceTicks: number[] | null
+  }>(() => {
+    if (!chartData.length) return { priceDomain: null, priceTicks: null }
     const values = chartType === 'candlestick'
       ? chartData.flatMap(d => [d.price, d.high, d.low])
       : chartData.map(d => d.price)
     const min = Math.min(...values)
     const max = Math.max(...values)
     const range = max - min || max * 0.01 || 1
-    return [min - range * 0.35, max + range * 0.02]
+    // Ticks only inside the actual price range, so no labels bleed into
+    // the volume region at the bottom of the shared plot
+    const tickCount = 7
+    const ticks = Array.from(
+      { length: tickCount },
+      (_, i) => min + (i * (max - min)) / (tickCount - 1)
+    )
+    return {
+      priceDomain: [min - range * 0.35, max + range * 0.02],
+      priceTicks: max > min ? ticks : [min]
+    }
   }, [chartData, chartType])
 
   const maxVolume = useMemo(
@@ -118,11 +131,16 @@ export default function EnhancedStockChart({ data, symbol, timeframe = '1mo', on
         <StockChart
           data={chartData}
           chartType={chartType}
-          selectedTimeframe={selectedTimeframe}
           crosshair={crosshair}
           priceDomain={priceDomain}
+          priceTicks={priceTicks}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+        />
+        {/* Subtle static divider between the price and volume regions */}
+        <div
+          className="pointer-events-none absolute left-0 right-0 border-t border-slate-200/70"
+          style={{ top: 'calc(5px + (100% - 40px) * 0.75)' }}
         />
         {pointer && (
           <>

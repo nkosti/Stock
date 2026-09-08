@@ -30,9 +30,9 @@ const ACTIVE_FILL: Record<string, string> = {
 interface StockChartProps {
   data: ProcessedChartData[]
   chartType: ChartType
-  selectedTimeframe: string
   crosshair: { x: string | number; y: number } | null
   priceDomain: [number, number] | null
+  priceTicks: number[] | null
   onMouseMove: ChartMouseMoveHandler
   onMouseLeave: () => void
 }
@@ -40,20 +40,12 @@ interface StockChartProps {
 export default function StockChart({
   data,
   chartType,
-  selectedTimeframe,
   crosshair,
   priceDomain,
+  priceTicks,
   onMouseMove,
   onMouseLeave
 }: StockChartProps) {
-  const getYAxisTickCount = (timeframe: string) => {
-    switch (timeframe) {
-      case '2h': return 14
-      case '1d': return 12
-      default: return 10
-    }
-  }
-
   const getXAxisInterval = (dataLength: number) => {
     if (dataLength <= 6) return 0
     return Math.floor(dataLength / 6)
@@ -122,9 +114,9 @@ export default function StockChart({
           orientation="right"
           tick={{ fontSize: 12 }}
           domain={priceDomain ?? ['auto', 'auto']}
+          ticks={priceTicks ?? undefined}
           tickFormatter={(value: number) => `$${value.toFixed(2)}`}
           axisLine={false}
-          tickCount={getYAxisTickCount(selectedTimeframe)}
         />
         <YAxis
           yAxisId="volume"
