@@ -130,9 +130,10 @@ export default function PriceChart({
             content={CustomTooltip}
             cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
           />
-          <Area 
-            type="monotone" 
-            dataKey="price" 
+          <Area
+            type="monotone"
+            dataKey="price"
+            isAnimationActive={false} 
             stroke="#3b82f6" 
             fillOpacity={1}
             fill="url(#colorPrice)"
@@ -162,9 +163,10 @@ export default function PriceChart({
             content={CustomTooltip}
             cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
           />
-          <Line 
-            type="monotone" 
-            dataKey="price" 
+          <Line
+            type="monotone"
+            dataKey="price"
+            isAnimationActive={false} 
             stroke="#3b82f6" 
             strokeWidth={3}
             dot={false}
@@ -193,25 +195,28 @@ export default function PriceChart({
           content={CustomTooltip}
           cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5', opacity: 0.8 }}
         />
-        <Line 
-          type="monotone" 
-          dataKey="high" 
+        <Line
+          type="monotone"
+          dataKey="high"
+          isAnimationActive={false} 
           stroke="#10b981" 
           strokeWidth={1}
           dot={false}
           strokeDasharray="3 3"
         />
-        <Line 
-          type="monotone" 
-          dataKey="low" 
+        <Line
+          type="monotone"
+          dataKey="low"
+          isAnimationActive={false} 
           stroke="#ef4444" 
           strokeWidth={1}
           dot={false}
           strokeDasharray="3 3"
         />
-        <Line 
-          type="monotone" 
-          dataKey="price" 
+        <Line
+          type="monotone"
+          dataKey="price"
+          isAnimationActive={false} 
           stroke="#3b82f6" 
           strokeWidth={3}
           dot={false}

@@ -52,7 +52,7 @@ export default function VolumeChart({ data, selectedTimeframe }: VolumeChartProp
           axisLine={false}
         />
         <Tooltip content={() => null} />
-        <Bar dataKey="volume" opacity={0.8}>
+        <Bar dataKey="volume" opacity={0.8} isAnimationActive={false}>
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.volumeColor} />
           ))}

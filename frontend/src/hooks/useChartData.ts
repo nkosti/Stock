@@ -22,19 +22,39 @@ export interface PriceStats {
   isPositive: boolean
 }
 
+// SVG charts degrade badly beyond a few hundred points (every mouse move
+// re-renders the whole series), so long timeframes are downsampled first.
+const MAX_CHART_POINTS = 600
+
 export function useChartData(data: ChartData | null, selectedTimeframe: string) {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return []
 
-    const mappedData = data.map((item, index) => {
+    let sampled = data
+    if (data.length > MAX_CHART_POINTS) {
+      const stride = Math.ceil(data.length / MAX_CHART_POINTS)
+      sampled = data.filter(
+        (_, i) => i % stride === 0 || i === data.length - 1
+      )
+    }
+
+    const mappedData = sampled.map((item, index) => {
       const date = new Date(item.Date)
       let formattedDate: string
 
       if (['2h', '1d', '2d'].includes(selectedTimeframe)) {
-        formattedDate = date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        formattedDate = date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: false 
+          hour12: false
+        })
+      } else if (['2y', '5y', 'max'].includes(selectedTimeframe)) {
+        // Include the year: month-day labels repeat across years, which both
+        // confuses readers and breaks the category-based crosshair lookup
+        formattedDate = date.toLocaleDateString('en-US', {
+          month: 'short',
+          year: selectedTimeframe === '2y' ? '2-digit' : 'numeric',
+          ...(selectedTimeframe === '2y' ? { day: 'numeric' } : {})
         })
       } else {
         formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
